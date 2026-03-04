@@ -100,11 +100,9 @@ export default function FeatureGraphs() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1a1a2e", margin: 0 }}>Feature Graphs</h1>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, padding: "8px 16px", fontSize: 13, color: "#aaa" }}>
-              🔍 Search features...
-            </div>
+            
             <button style={{ background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-              ✓ Exported!
+              Send
             </button>
           </div>
         </div>
