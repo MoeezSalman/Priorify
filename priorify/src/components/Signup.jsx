@@ -481,7 +481,7 @@ const handleSubmit = async () => {
 
     // success
     setSubmitted(true);
-  } catch (err) {
+  } catch {
     setErrors((prev) => ({
       ...prev,
       email: "Backend not reachable (check server running on 5000)",
@@ -635,7 +635,7 @@ const handleSubmit = async () => {
               </button>
 
               <div className="signin-row">
-                Already have an account? <a href="#">Sign In</a>
+                Already have an account? <a href="./Login">Sign In</a>
               </div>
             </>
           )}
