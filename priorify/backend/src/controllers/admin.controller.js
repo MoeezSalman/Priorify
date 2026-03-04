@@ -33,3 +33,32 @@ exports.createAdmin = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.loginAdmin = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({ message: "Username and password are required." });
+    }
+
+    const admin = await Admin.findOne({ username: username.trim() });
+    if (!admin) {
+      return res.status(401).json({ message: "Invalid credentials." });
+    }
+
+    const ok = await bcrypt.compare(password, admin.passwordHash);
+    if (!ok) {
+      return res.status(401).json({ message: "Invalid credentials." });
+    }
+
+    // For now, just return success (later you can add JWT token)
+    return res.status(200).json({
+      message: "Login successful",
+      admin: { id: admin._id, username: admin.username },
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
