@@ -422,6 +422,7 @@ const SKILLS = [
   { label: "Research", width: "55%" },
   { label: "Dev", width: "38%" },
 ];
+const API_BASE = "http://localhost:5000";
 
 export default function TaskySignup() {
   const [form, setForm] = useState({
@@ -448,12 +449,47 @@ export default function TaskySignup() {
     setErrors((er) => ({ ...er, [field]: undefined }));
   };
 
-  const handleSubmit = () => {
-    const e = validate();
-    if (Object.keys(e).length) { setErrors(e); return; }
-    setLoading(true);
-    setTimeout(() => { setLoading(false); setSubmitted(true); }, 1200);
-  };
+const handleSubmit = async () => {
+  const e = validate();
+  if (Object.keys(e).length) {
+    setErrors(e);
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: form.email,      // using email as admin username
+        password: form.password,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      // show backend error on UI
+      setErrors((prev) => ({
+        ...prev,
+        email: data.message || "Signup failed",
+      }));
+      return;
+    }
+
+    // success
+    setSubmitted(true);
+  } catch (err) {
+    setErrors((prev) => ({
+      ...prev,
+      email: "Backend not reachable (check server running on 5000)",
+    }));
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <>
