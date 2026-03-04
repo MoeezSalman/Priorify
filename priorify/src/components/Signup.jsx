@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import { useNavigate, Link } from "react-router-dom";
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
 
@@ -425,6 +425,7 @@ const SKILLS = [
 const API_BASE = "http://localhost:5000";
 
 export default function TaskySignup() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     firstName: "", lastName: "", email: "", password: "", confirmPassword: "", agreed: false,
   });
@@ -481,6 +482,7 @@ const handleSubmit = async () => {
 
     // success
     setSubmitted(true);
+     setTimeout(() => navigate("/dashboard"), 1200);
   } catch {
     setErrors((prev) => ({
       ...prev,
@@ -488,6 +490,7 @@ const handleSubmit = async () => {
     }));
   } finally {
     setLoading(false);
+    
   }
 };
 
