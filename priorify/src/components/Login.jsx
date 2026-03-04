@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import { useNavigate, Link } from "react-router-dom";
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
 
@@ -336,8 +336,9 @@ const TASKS = [
   { done: false, width: "62%", label: "Code" },
   { done: false, width: "45%", label: "Test" },
 ];
-
+const API_BASE = "http://localhost:5000";
 export default function Login() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
@@ -355,12 +356,43 @@ export default function Login() {
     setErrors((er) => ({ ...er, [field]: undefined }));
   };
 
-  const handleSubmit = () => {
-    const e = validate();
-    if (Object.keys(e).length) { setErrors(e); return; }
-    setLoading(true);
-    setTimeout(() => { setLoading(false); setSubmitted(true); }, 1200);
-  };
+ const handleSubmit = async () => {
+  const e = validate();
+  if (Object.keys(e).length) { setErrors(e); return; }
+
+  setLoading(true);
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: form.email,      // email used as username
+        password: form.password,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setErrors((prev) => ({
+        ...prev,
+        password: data.message || "Login failed",
+      }));
+      return;
+    }
+
+    setSubmitted(true);
+    setTimeout(() => navigate("/dashboard"), 800);
+    // Later: navigate to dashboard
+  } catch (err) {
+    setErrors((prev) => ({
+      ...prev,
+      password: "Backend not reachable (check server running on 5000)",
+    }));
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <>
