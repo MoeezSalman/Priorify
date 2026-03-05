@@ -93,7 +93,7 @@ const styles = `
     font-size: 13.5px;
     font-family: 'DM Sans', sans-serif;
     color: #1a1438;
-    background: #faf9ff;
+    background: #fff;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
@@ -431,6 +431,7 @@ export default function Login() {
                   type="email" placeholder="Enter the email"
                   value={form.email} onChange={handleChange("email")}
                   className={errors.email ? "error" : ""}
+                  autoComplete="off"
                 />
                 {errors.email && <div className="error-msg">{errors.email}</div>}
               </div>
@@ -441,13 +442,44 @@ export default function Login() {
                   type="password" placeholder="Enter the Password"
                   value={form.password} onChange={handleChange("password")}
                   className={errors.password ? "error" : ""}
+                  autoComplete="new-password"
                 />
                 {errors.password && <div className="error-msg">{errors.password}</div>}
               </div>
 
               <div className="forgot-row">
-                <a href="#">Forgot password?</a>
-              </div>
+  <button
+    type="button"
+    style={{ background: "transparent", border: "none", color: "#6c5ce7", cursor: "pointer" }}
+    onClick={async () => {
+      if (!form.email) {
+        setErrors((p) => ({ ...p, email: "Enter email first." }));
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/forgot-password`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: form.email }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          setErrors((p) => ({ ...p, email: data.message || "Failed to send OTP" }));
+          return;
+        }
+
+        // ✅ pass email to forgot screen
+        navigate("/forgot", { state: { email: form.email } });
+      } catch {
+        setErrors((p) => ({ ...p, email: "Backend not reachable" }));
+      }
+    }}
+  >
+    Forgot password?
+  </button>
+</div>
 
               <button className="btn-submit" onClick={handleSubmit} disabled={loading}>
                 {loading ? "Signing in…" : "Sign in"}
