@@ -2,8 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Signup from "./components/Signup";
 import Login from "./components/Login";
 import FeatureGraphs from "./components/Featuregraphs";
-import Dashboard from "./components/Dashboard";
-
+import ForgotPassword from "./components/ForgotPassword";
+import Featurescreen from "./components/FeatureAnalytics";
 
 function App() {
   return (
@@ -13,7 +13,8 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<FeatureGraphs />} />
-        <Route path="/Dashboard12" element={<Dashboard />} />
+        <Route path="/forgot" element={<ForgotPassword />} />
+        <Route path="/feature" element={<Featurescreen/>}/>
       </Routes>
     </Router>
   );
