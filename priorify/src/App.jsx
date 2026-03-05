@@ -3,6 +3,7 @@ import Signup from "./components/Signup";
 import Login from "./components/Login";
 import FeatureGraphs from "./components/Featuregraphs";
 import ForgotPassword from "./components/ForgotPassword";
+import Featurescreen from "./components/FeatureAnalytics";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<FeatureGraphs />} />
         <Route path="/forgot" element={<ForgotPassword />} />
+        <Route path="/feature" element={<Featurescreen/>}/>
       </Routes>
     </Router>
   );
