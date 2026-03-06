@@ -26,7 +26,7 @@ const LeftSideBar = {
 const UpperDivImg = {
     paddingTop:"10px",
     width:"255px",
-    height:"75px"
+    height:"115px"
 }
 
 const MiddleDiv = {
