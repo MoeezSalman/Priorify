@@ -5,9 +5,11 @@ import totalFeedback from '../assets/totalFeedback.png'
 import unresolved from '../assets/unresolved.png'
 import emoji from '../assets/emoji.png'
 import {BarChart,Bar,XAxis,YAxis,Tooltip,ResponsiveContainer,CartesianGrid,Cell, LabelList  } from "recharts";
+import hamburger from '../assets/hamburger.png'
 
 const MainSection = {
-    display:"flex"
+    display:"flex",
+    width:"100vw"
 }
 
 const LeftSideBar = {
@@ -16,21 +18,19 @@ const LeftSideBar = {
     height:"100vh",
     width:"15vw",
     backgroundColor:"#1a1f2e",
+    position:"fixed",
+    left:"0",
+    overflow:"hidden",
 }
 
 const UpperDivImg = {
-    width:"120px",
-    height:"60px"
-}
-
-const UpperDiv = {
-    display:"flex",
-    alignItems:"center",
-    justifyContent:"center",
-    marginTop:"30px",
+    paddingTop:"10px",
+    width:"255px",
+    height:"75px"
 }
 
 const MiddleDiv = {
+    paddingTop:"20px",
     display:"flex",
     flexDirection:"column"
 }
@@ -46,7 +46,7 @@ const MiddleDivButton = {
 const LeftSideInnerDiv1 = {
     display:"flex",
     flexDirection:"column",
-    gap:"15px"
+    gap:"10px"
 }
 
 const LeftSideInnerDiv2 = {
@@ -86,15 +86,19 @@ const hrLine = {
 }
 
 const CenterMainDiv = {
-    width:"85vw",
-    backgroundColor:"#f0f2f5"
+    backgroundColor:"#f0f2f5",
+    minHeight:"100vh"
 }
 
 const NavBar = {
     display:"flex",
     alignItems:"center",
     backgroundColor:"white",
-    height:"75px"
+    height:"75px",
+    top:"0",
+    left:"0",
+    right:"0",
+    zIndex:"1000"
 }
 
 const NavBarItems = {
@@ -161,7 +165,6 @@ const CenterMainOuterDiv = {
     backgroundColor:"#f2f6ff",
     alignItems:"center",
     justifyContent:"space-between",
-    width:"65vw",
 }
 
 const CenterMiddleDivButton = {
@@ -191,7 +194,7 @@ const box1 = {
     paddingBottom:"10px",
     paddingLeft:"25px",
     paddingRight:"25px",
-    width:"355px",
+    width:"100%",
     justifyContent:"space-between",
     height:"100px"
 }
@@ -204,8 +207,9 @@ const box2 = {
     paddingBottom:"10px",
     paddingLeft:"25px",
     paddingRight:"25px",
-    width:"355px",
-    justifyContent:"space-between"
+    width:"100%",
+    justifyContent:"space-between",
+    height:"100px"
 }
 
 const box3 = {
@@ -216,8 +220,9 @@ const box3 = {
     paddingBottom:"10px",
     paddingLeft:"25px",
     paddingRight:"25px",
-    width:"355px",
-    justifyContent:"space-between"
+    width:"100%",
+    justifyContent:"space-between",
+    height:"100px"
 }
 
 const innerbox1Img = {
@@ -249,7 +254,7 @@ const graph1Box = {
     borderRadius: "15px",
     padding: "20px",
     marginTop: "20px",
-    width: "65vw",
+    width: "100%",
     height: "320px",
 }
 
@@ -277,7 +282,7 @@ const graph2Box = {
     borderRadius: "15px",
     padding: "20px",
     marginTop: "20px",
-    width: "65vw",
+    width: "100%",
     height: "320px",
 }
 
@@ -342,9 +347,25 @@ const nameLogo = {
         fontSize: "22px"
 }
 
+const hamburgerBtn = {
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    marginLeft: "15px",
+    width:"40px",
+    height:"40px"
+}
+
+const navLeft = {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px"
+}
+
 function Dashboard() {
 
     const [activeState,setActiveState] = useState("dashboard")
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const graphData = [
         { name: "Bug", value: 230, color: "#3B82F6" },
@@ -387,46 +408,50 @@ function Dashboard() {
     return (
         
         <div style={MainSection}>
-            <div style={LeftSideBar}>
+            {isSidebarOpen && (
+                    <div style={LeftSideBar}>
 
-                <div style={LeftSideInnerDiv1}>
-                    <div style={UpperDiv}>
-                        <img style={UpperDivImg} src={logo} alt="logo" />
-                    </div>
+                        <div style={LeftSideInnerDiv1}>
+                            <img style={UpperDivImg} src={logo} alt="logo" />
+                            
+                            <hr style={hrLine} />
 
-                    <hr style={hrLine} />
-
-                    <div style={MiddleDiv}>
-                        <button style={activeState === "dashboard" ? activeButton : MiddleDivButton} 
-                        onClick={ () => setActiveState("dashboard")}>Dashboard</button>
-                        <button style={activeState === "priorify" ? activeButton : MiddleDivButton}
-                        onClick={() => setActiveState("priorify")}>Priority</button>
-                        <button style={activeState === "graph" ? activeButton : MiddleDivButton}
-                        onClick={() => setActiveState("graph")}>Graph</button>
-                    </div>
-                </div>
-
-                <div style={LeftSideInnerDiv2}>
-                    <hr style={hrLine} />
-
-                    <div style={LowerDiv}>
-                        <div style={LowerInnerDiv1}>
-                            {getInitials(name)}
+                            <div style={MiddleDiv}>
+                                <button style={activeState === "dashboard" ? activeButton : MiddleDivButton} 
+                                onClick={() => setActiveState("dashboard")}>Dashboard</button>
+                                <button style={activeState === "priorify" ? activeButton : MiddleDivButton}
+                                onClick={() => setActiveState("priorify")}>Priority</button>
+                                <button style={activeState === "graph" ? activeButton : MiddleDivButton}
+                                onClick={() => setActiveState("graph")}>Graph</button>
+                            </div>
                         </div>
 
-                        <div className="LowerInnerDiv2">
-                            <h4 id="LowerInnerHeading1">{name}</h4>
-                            <p id="LowerInnerText">Project Manager</p>
+                        <div style={LeftSideInnerDiv2}>
+                            <hr style={hrLine} />
+
+                            <div style={LowerDiv}>
+                                <div style={LowerInnerDiv1}>
+                                    {getInitials(name)}
+                                </div>
+
+                                <div className="LowerInnerDiv2">
+                                    <h4 id="LowerInnerHeading1">{name}</h4>
+                                    <p id="LowerInnerText">Project Manager</p>
+                                </div>
+
+                            </div>
                         </div>
 
                     </div>
-                </div>
+            )}
+            
 
-            </div>
-
-            <div style={CenterMainDiv}>
+            <div style={{...CenterMainDiv, width: isSidebarOpen ? "85vw" : "100vw",
+            marginLeft: isSidebarOpen ? "15vw" : "0"}}>
                 <div style={NavBar}>
-                    <div className="NavBarHeading">
+                    <div style={navLeft}>
+                        <img style={hamburgerBtn} src={hamburger} 
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)} alt="button" />
                         <h2 style={NavBarHeading1}>Feedback Dashboard</h2>
                     </div>
 
@@ -440,7 +465,7 @@ function Dashboard() {
 
                 <div style={MainCentralDiv}>
                     <div>
-                        <div style={CenterMainOuterDiv}>
+                        <div style={{...CenterMainOuterDiv,width: isSidebarOpen ? "65vw" : "80vw"}}>
                             <div style={CenterMiddleDiv1}> 
                                 <h3 style={CenterMiddleDivHeading}>Your Feedback Analytics Area</h3>
                                 <p style={CenterMiddleDivText}>Monitor feedback trends, track sentiment, and manage priorities to improve your product and customer experience.</p>
@@ -450,7 +475,7 @@ function Dashboard() {
                             <img style={CenterMiddleDiv2Img} src={chat} alt="logo" />
                         </div>
 
-                        <div style={centerDiv}>
+                        <div style={{...centerDiv, width : isSidebarOpen ? "1105px" : "1360px"}}>
                             <div style={box1}>
                                 <div className="innerbox1">
                                     <h2 id="innerbox1Heading">1,248</h2>
@@ -476,7 +501,7 @@ function Dashboard() {
                             </div>
                         </div>
 
-                        <div style={graphs}>
+                        <div style={{...graphs,  width : isSidebarOpen ? "1105px" : "1360px"}}>
                             <div className="Graph1" style={graph1Box}>
                                 <div style={graphHeader}>
                                     <h3 style={graphHeading}>Top Feedback Keywords</h3>
