@@ -15,7 +15,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/graph" element={<FeatureGraphs />} />
         <Route path="/forgot" element={<ForgotPassword />} />
-        <Route path="/feature" element={<Featurescreen/>}/>
+        <Route path="/priority" element={<Featurescreen/>}/>
         <Route path="/dashboard" element={<Dashboard/>}/>
       </Routes>
     </Router>
