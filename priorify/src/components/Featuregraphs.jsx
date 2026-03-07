@@ -18,8 +18,8 @@ const sentimentTrendData = [
   { month: "Dec", positive: 78, negative: 28 },
 ];
 
-const DONUT_SIZE = 150;
-const STROKE = 22;
+const DONUT_SIZE = 120;
+const STROKE = 18;
 const R = (DONUT_SIZE - STROKE) / 2;
 const CIRC = 2 * Math.PI * R;
 
@@ -48,7 +48,7 @@ function DonutChart() {
 function PriorityBar({ label, value, max, color, dot }) {
   const pct = Math.round((value / max) * 100);
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
       <span style={{ color: dot, fontSize: 10 }}>●</span>
       <span style={{ width: 58, fontSize: 13, color: "#555", fontWeight: 500 }}>{label}</span>
       <div style={{ flex: 1, background: "#f0f0f0", borderRadius: 6, height: 13, overflow: "hidden" }}>
@@ -76,7 +76,7 @@ export default function FeatureGraphs() {
     background: #f5f6fa;
     min-height: 100vh;
     width: 100%;
-    padding: 32px 36px;
+    padding: 18px 36px;
     box-sizing: border-box;
   }
   .fg-page *, .fg-page *::before, .fg-page *::after {
@@ -108,26 +108,26 @@ export default function FeatureGraphs() {
         </div>
 
         {/* Stat Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20, marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20, marginBottom: 14 }}>
           {[
             { label: "TOTAL FEEDBACK", value: "413", sub: "Across all features", color: "#1a1a2e", dot: false },
             { label: "POSITIVE", value: "52%", sub: "214 mentions", color: "#22c55e", dot: true },
             { label: "NEGATIVE", value: "30%", sub: "124 mentions", color: "#ef4444", dot: true },
             { label: "NEUTRAL", value: "18%", sub: "75 mentions", color: "#f59e0b", dot: true },
           ].map(({ label, value, sub, color, dot }) => (
-            <div key={label} style={{ background: "#fff", borderRadius: 14, padding: "22px 24px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div key={label} style={{ background: "#fff", borderRadius: 14, padding: "14px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <p style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", letterSpacing: 1, marginBottom: 8, marginTop: 0 }}>{label}</p>
-              <p style={{ fontSize: 34, fontWeight: 800, color, margin: "0 0 6px" }}>{value}</p>
+              <p style={{ fontSize: 26, fontWeight: 800, color, margin: "0 0 6px" }}>{value}</p>
               <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>{dot && <span style={{ color }}>● </span>}{sub}</p>
             </div>
           ))}
         </div>
 
         {/* Middle Row */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 14 }}>
           {/* Sentiment Breakdown */}
-          <div style={{ background: "#fff", borderRadius: 14, padding: "24px 28px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
+          <div style={{ background: "#fff", borderRadius: 14, padding: "16px 22px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
               <div>
                 <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a2e", margin: "0 0 4px" }}>Sentiment Breakdown</h2>
                 <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>Feedback sentiment distribution</p>
@@ -160,7 +160,7 @@ export default function FeatureGraphs() {
 
           {/* Priority Breakdown */}
           <div style={{ background: "#fff", borderRadius: 14, padding: "24px 28px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 30 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a2e", margin: 0 }}>Priority Breakdown</h2>
               <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} style={selectStyle}>
                 <option>All Time</option>
@@ -192,7 +192,7 @@ export default function FeatureGraphs() {
               </div>
             ))}
           </div>
-          <ResponsiveContainer width="100%" height={230}>
+          <ResponsiveContainer width="100%" height={170}>
             <LineChart data={sentimentTrendData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="month" tick={{ fontSize: 12, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
