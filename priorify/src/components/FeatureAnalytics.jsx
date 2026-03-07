@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import hamburger from '../assets/hamburger.png'
+import logo from '../assets/logo.png'
 
 // --- Mock Data ---
 const initialFeatures = [
@@ -20,6 +23,88 @@ const priorityStyles = {
 
 const sentimentEmoji = { Positive: "😊", Negative: "😞", Neutral: "😐" };
 
+const LeftSideBar = {
+    display:"flex",
+    flexDirection:"column",
+    height:"100vh",
+    width:"15vw",
+    backgroundColor:"#1a1f2e",
+    position:"fixed",
+    left:"0",
+    overflow:"hidden",
+}
+
+const UpperDivImg = {
+    paddingTop:"10px",
+    width:"255px",
+    height:"115px"
+}
+
+const MiddleDiv = {
+    paddingTop:"20px",
+    display:"flex",
+    flexDirection:"column"
+}
+
+const activeButton = {
+    backgroundColor:"#4C7CF3"
+}
+
+const MiddleDivButton = {
+    backgroundColor:"#1a1f2e"
+}
+
+const LeftSideInnerDiv1 = {
+    display:"flex",
+    flexDirection:"column",
+    gap:"10px"
+}
+
+const LeftSideInnerDiv2 = {
+    display:"flex",
+    flexDirection:"column",
+    gap:"10px",
+    marginTop:"auto"
+}
+
+const LowerDiv = {
+    display:"flex",
+    alignItems:"center",
+    marginTop:"15px",
+    marginLeft:"30px",
+    gap:"10px",
+    paddingBottom:"20px"
+}
+
+const LowerInnerDiv1 = {
+    width:"40px",
+    height:"40px",
+    borderRadius: "50%",
+    backgroundColor: "#4A90E2",
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: "bold",
+    fontSize: "14px"
+}
+
+const hrLine = {
+    border: "none",
+    height: "1px",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    width: "100%",
+}
+
+const hamburgerBtn = {
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    width:"40px",
+    height:"40px"
+}
+
+
 export default function FeatureAnalytics() {
   // Matching the screenshot's state: Sentiment "All" and Priority "Low"
   const [sentimentFilter, setSentimentFilter] = useState("All");
@@ -36,33 +121,92 @@ export default function FeatureAnalytics() {
   const sprintItems = initialFeatures.filter((f) => f.sprint);
   const backlogItems = initialFeatures.filter((f) => !f.sprint);
 
+  const navigate = useNavigate();
+  const getInitials = (name) => {
+    const words=name.trim().split(" ");
+    const first=words[0]?.[0] || "";
+    const last=words[1]?.[0] || "";
+    return (first + last).toUpperCase();
+  }
+
+  let name="JOE MAX";
+
+  const [activeState,setActiveState] = useState("priority")
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+
   return (
-    <div style={{ background: "#f7f9fc", minHeight: "100vh", padding: "32px", fontFamily: "Inter, system-ui, sans-serif", width: "100%", boxSizing: "border-box" }}>
+
+  <div>
+
+      {isSidebarOpen && (
+        <div style={LeftSideBar}>
+    
+          <div style={LeftSideInnerDiv1}>
+              <img style={UpperDivImg} src={logo} alt="logo" />
+                                
+              <hr style={hrLine} />
+    
+              <div style={MiddleDiv}>
+                  <button style={activeState === "dashboard" ? activeButton : MiddleDivButton} 
+                     onClick={() => { setActiveState("dashboard")
+                     navigate("/dashboard");}}>Dashboard</button>
+                  <button style={activeState === "priority" ? activeButton : MiddleDivButton}
+                     onClick={() => { setActiveState("priority") 
+                     navigate("/priority");}}>Priority</button>
+                  <button style={activeState === "graph" ? activeButton : MiddleDivButton}
+                     onClick={() => { setActiveState("graph"); 
+                     navigate("/graph")}}>Graph</button>
+              </div>
+            </div>
+    
+            <div style={LeftSideInnerDiv2}>
+              <hr style={hrLine} />
+    
+                <div style={LowerDiv}>
+                  <div style={LowerInnerDiv1}>
+                      {getInitials(name)}
+                  </div>
+    
+                  <div className="LowerInnerDiv2">
+                      <h4 id="LowerInnerHeading1" style={{color:"white"}}>{name}</h4>
+                      <p id="LowerInnerText" style={{color:"white"}}>Project Manager</p>
+                  </div>
+    
+                </div>
+            </div>
+    
+        </div>
+      )}
+
+    <div style={{ background: "#f7f9fc", minHeight: "100vh", padding: "15px", fontFamily: "Inter, system-ui, sans-serif", width: isSidebarOpen ? "85vw" : "100vw",
+    marginLeft: isSidebarOpen ? "15vw" : "0", boxSizing: "border-box" }}>
       <style>{`
-  body:has(.analytics-page) {
-    display: block !important;
-    background: #f7f9fc !important;
-    color: #4a5568 !important;
-  }
-  body:has(.analytics-page) #root {
-    width: 100% !important;
-    min-height: 100vh !important;
-  }
-  body:has(.analytics-page) input,
-  body:has(.analytics-page) select {
-    color: #4a5568 !important;
-    background-color: #fff !important;
-  }
-  body:has(.analytics-page) select option {
-    background-color: #fff !important;
-    color: #4a5568 !important;
-  }
-`}</style>
+          body:has(.analytics-page) {
+          display: block !important;
+          background: #f7f9fc !important;
+          color: #4a5568 !important;
+          }
+          body:has(.analytics-page) #root {
+          width: 100% !important;
+          min-height: 100vh !important;
+          }
+          body:has(.analytics-page) input,
+          body:has(.analytics-page) select {
+          color: #4a5568 !important;
+          background-color: #fff !important;
+          }
+          body:has(.analytics-page) select option {
+          background-color: #fff !important;
+          color: #4a5568 !important;
+        }
+      `}</style>
       <div className="analytics-page" style={{ display: "none" }} />
       
       {/* --- HEADER --- */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
-        <div>
+        <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:"15px"}}>
+          <img style={hamburgerBtn} src={hamburger} onClick={() => setIsSidebarOpen(!isSidebarOpen)} alt="button" />
           <h1 style={{ fontSize: "24px", fontWeight: "700", color: "#1a202c", margin: 0 }}>Feature Analytics</h1>
         </div>
         <div style={{ display: "flex", gap: "12px" }}>
@@ -239,5 +383,6 @@ color: sentimentFilter === s
         </div>
       </div>
     </div>
+  </div>
   );
 }

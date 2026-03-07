@@ -6,6 +6,7 @@ import unresolved from '../assets/unresolved.png'
 import emoji from '../assets/emoji.png'
 import {BarChart,Bar,XAxis,YAxis,Tooltip,ResponsiveContainer,CartesianGrid,Cell, LabelList  } from "recharts";
 import hamburger from '../assets/hamburger.png'
+import { useNavigate } from "react-router-dom";
 
 const MainSection = {
     display:"flex",
@@ -123,7 +124,6 @@ const NavBarHeading1 = {
     color:"black",
     fontSize: "32px",
     fontWeight: "500",
-    paddingLeft:"30px"
 }
 
 const syncButton = {
@@ -404,6 +404,7 @@ function Dashboard() {
         year:"numeric"
     });
 
+    const navigate = useNavigate();
 
     return (
         
@@ -418,11 +419,14 @@ function Dashboard() {
 
                             <div style={MiddleDiv}>
                                 <button style={activeState === "dashboard" ? activeButton : MiddleDivButton} 
-                                onClick={() => setActiveState("dashboard")}>Dashboard</button>
+                                onClick={() => { setActiveState("dashboard")
+                                    navigate("/dashboard");}}>Dashboard</button>
                                 <button style={activeState === "priorify" ? activeButton : MiddleDivButton}
-                                onClick={() => setActiveState("priorify")}>Priority</button>
+                                onClick={() => { setActiveState("priorify") 
+                                    navigate("/priority");}}>Priority</button>
                                 <button style={activeState === "graph" ? activeButton : MiddleDivButton}
-                                onClick={() => setActiveState("graph")}>Graph</button>
+                                onClick={() => { setActiveState("graph"); 
+                                    navigate("/graph")}}>Graph</button>
                             </div>
                         </div>
 
