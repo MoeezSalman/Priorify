@@ -2,6 +2,9 @@ import { useState } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
+import { useNavigate } from "react-router-dom";
+import hamburger from '../assets/hamburger.png'
+import logo from '../assets/logo.png'
 
 const sentimentTrendData = [
   { month: "Jan", positive: 62, negative: 40 },
@@ -32,6 +35,8 @@ function DonutChart() {
   const negOffset = posOffset - posLen - gap;
   const neuOffset = negOffset - negLen - gap;
 
+  const navigate = useNavigate();
+
   return (
     <svg width={DONUT_SIZE} height={DONUT_SIZE} style={{ transform: "rotate(-90deg)" }}>
       <circle cx={DONUT_SIZE/2} cy={DONUT_SIZE/2} r={R} fill="none" stroke="#f0f0f0" strokeWidth={STROKE} />
@@ -59,6 +64,87 @@ function PriorityBar({ label, value, max, color, dot }) {
   );
 }
 
+const LeftSideBar = {
+    display:"flex",
+    flexDirection:"column",
+    height:"100vh",
+    width:"15vw",
+    backgroundColor:"#1a1f2e",
+    position:"fixed",
+    left:"0",
+    overflow:"hidden",
+}
+
+const UpperDivImg = {
+    paddingTop:"10px",
+    width:"255px",
+    height:"115px"
+}
+
+const MiddleDiv = {
+    paddingTop:"20px",
+    display:"flex",
+    flexDirection:"column"
+}
+
+const activeButton = {
+    backgroundColor:"#4C7CF3"
+}
+
+const MiddleDivButton = {
+    backgroundColor:"#1a1f2e"
+}
+
+const LeftSideInnerDiv1 = {
+    display:"flex",
+    flexDirection:"column",
+    gap:"10px"
+}
+
+const LeftSideInnerDiv2 = {
+    display:"flex",
+    flexDirection:"column",
+    gap:"10px",
+    marginTop:"auto"
+}
+
+const LowerDiv = {
+    display:"flex",
+    alignItems:"center",
+    marginTop:"15px",
+    marginLeft:"30px",
+    gap:"10px",
+    paddingBottom:"20px"
+}
+
+const LowerInnerDiv1 = {
+    width:"40px",
+    height:"40px",
+    borderRadius: "50%",
+    backgroundColor: "#4A90E2",
+    color: "white",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: "bold",
+    fontSize: "14px"
+}
+
+const hrLine = {
+    border: "none",
+    height: "1px",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    width: "100%",
+}
+
+const hamburgerBtn = {
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    width:"40px",
+    height:"40px"
+}
+
 export default function FeatureGraphs() {
   const [trendFilter, setTrendFilter] = useState("Monthly");
   const [priorityFilter, setPriorityFilter] = useState("All Time");
@@ -68,6 +154,19 @@ export default function FeatureGraphs() {
     fontSize: 12, color: "#555", background: "#fff", cursor: "pointer"
   };
 
+    const getInitials = (name) => {
+      const words=name.trim().split(" ");
+      const first=words[0]?.[0] || "";
+      const last=words[1]?.[0] || "";
+      return (first + last).toUpperCase();
+    }
+  
+    let name="JOE MAX";
+    const navigate = useNavigate();
+  
+    const [activeState,setActiveState] = useState("graph")
+      const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   return (
     <>
      <style>{`
@@ -75,7 +174,6 @@ export default function FeatureGraphs() {
     font-family: system-ui, sans-serif;
     background: #f5f6fa;
     min-height: 100vh;
-    width: 100%;
     padding: 18px 36px;
     box-sizing: border-box;
   }
@@ -93,22 +191,66 @@ export default function FeatureGraphs() {
   }
 `}</style>
 
+      {isSidebarOpen && (
+        <div style={LeftSideBar}>
+    
+          <div style={LeftSideInnerDiv1}>
+              <img style={UpperDivImg} src={logo} alt="logo" />
+                                
+              <hr style={hrLine} />
+    
+              <div style={MiddleDiv}>
+                  <button style={activeState === "dashboard" ? activeButton : MiddleDivButton} 
+                     onClick={() => { setActiveState("dashboard")
+                     navigate("/dashboard");}}>Dashboard</button>
+                  <button style={activeState === "priority" ? activeButton : MiddleDivButton}
+                     onClick={() => { setActiveState("priority") 
+                     navigate("/priority");}}>Priority</button>
+                  <button style={activeState === "graph" ? activeButton : MiddleDivButton}
+                     onClick={() => { setActiveState("graph"); 
+                     navigate("/graph")}}>Graph</button>
+              </div>
+            </div>
+    
+            <div style={LeftSideInnerDiv2}>
+              <hr style={hrLine} />
+    
+                <div style={LowerDiv}>
+                  <div style={LowerInnerDiv1}>
+                      {getInitials(name)}
+                  </div>
+    
+                  <div className="LowerInnerDiv2">
+                      <h4 id="LowerInnerHeading1">{name}</h4>
+                      <p id="LowerInnerText">Project Manager</p>
+                  </div>
+    
+                </div>
+            </div>
+    
+        </div>
+      )}
+
       {/* This div escapes body flex centering by being full width */}
-      <div className="fg-page">
+      <div className="fg-page" style={{width: isSidebarOpen ? "85vw" : "100vw",
+    marginLeft: isSidebarOpen ? "15vw" : "0"}}>
 
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1a1a2e", margin: 0 }}>Feature Graphs</h1>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{ display: "flex", alignItems: "center",gap:"15px"}}>
+            <img style={hamburgerBtn} src={hamburger} onClick={() => setIsSidebarOpen(!isSidebarOpen)} alt="button" />
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1a1a2e", margin: 0 }}>Feature Graphs</h1>
+          </div> 
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            
-            <button style={{ background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+
+            <button style={{ marginLeft:"auto",background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
               Send
             </button>
           </div>
         </div>
 
         {/* Stat Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20, marginBottom: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20, marginBottom: 14,paddingTop:"20px" }}>
           {[
             { label: "TOTAL FEEDBACK", value: "413", sub: "Across all features", color: "#1a1a2e", dot: false },
             { label: "POSITIVE", value: "52%", sub: "214 mentions", color: "#22c55e", dot: true },

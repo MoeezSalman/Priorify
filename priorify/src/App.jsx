@@ -4,6 +4,7 @@ import Login from "./components/Login";
 import FeatureGraphs from "./components/Featuregraphs";
 import ForgotPassword from "./components/ForgotPassword";
 import Featurescreen from "./components/FeatureAnalytics";
+import Dashboard from "./components/Dashboard";
 
 function App() {
   return (
@@ -12,9 +13,10 @@ function App() {
         <Route path="/" element={<Navigate to="/signup" />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<FeatureGraphs />} />
+        <Route path="/graph" element={<FeatureGraphs />} />
         <Route path="/forgot" element={<ForgotPassword />} />
-        <Route path="/feature" element={<Featurescreen/>}/>
+        <Route path="/priority" element={<Featurescreen/>}/>
+        <Route path="/dashboard" element={<Dashboard/>}/>
       </Routes>
     </Router>
   );
