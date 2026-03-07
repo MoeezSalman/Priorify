@@ -49,8 +49,7 @@ export default function FeatureAnalytics() {
     min-height: 100vh !important;
   }
   body:has(.analytics-page) input,
-  body:has(.analytics-page) select,
-  body:has(.analytics-page) button {
+  body:has(.analytics-page) select {
     color: #4a5568 !important;
     background-color: #fff !important;
   }
@@ -96,8 +95,18 @@ export default function FeatureAnalytics() {
               onClick={() => setSentimentFilter(s)}
               style={{
                 padding: "4px 12px", borderRadius: "20px", border: sentimentFilter === s ? "none" : "1px solid #e2e8f0",
-                background: sentimentFilter === s ? "#4299e1" : "transparent",
-                color: sentimentFilter === s ? "#fff" : "#4a5568",
+                background: sentimentFilter === s
+  ? s === "Positive" ? "#c6f6d5"
+  : s === "Negative" ? "#fed7d7"
+  : s === "Neutral" ? "#e9d8fd"
+  : "#4299e1"
+  : "transparent",
+color: sentimentFilter === s
+  ? s === "Positive" ? "#276749"
+  : s === "Negative" ? "#9b2c2c"
+  : s === "Neutral" ? "#553c9a"
+  : "#fff"
+  : "#4a5568",
                 fontSize: "12px", fontWeight: "500", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px"
               }}>
               {s !== "All" && <span>{sentimentEmoji[s]}</span>} {s}
