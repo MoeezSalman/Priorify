@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import logo from "../assets/logo.png";
 import chat from "../assets/chat_bubble.png";
 import totalFeedback from "../assets/totalFeedback.png";
@@ -29,6 +29,10 @@ function Dashboard() {
 
   const [activeState, setActiveState] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const sidebarRef = useRef(null);
+  const hamburgerRef = useRef(null);
+  const [isMobileScreen, setIsMobileScreen] = useState(window.innerWidth < 786);
 
   const graphData = [
     { name: "Bug", value: 230, color: "#3B82F6" },
@@ -77,6 +81,44 @@ function Dashboard() {
 
     fetchStats();
   }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 786;
+      setIsMobileScreen(mobile);
+
+      if (!mobile) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!isMobileScreen || !isSidebarOpen) return;
+
+      const clickedInsideSidebar =
+        sidebarRef.current && sidebarRef.current.contains(event.target);
+
+      const clickedHamburger =
+        hamburgerRef.current && hamburgerRef.current.contains(event.target);
+
+      if (!clickedInsideSidebar && !clickedHamburger) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isMobileScreen, isSidebarOpen]);
 
   const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
   const name = storedUser
@@ -487,7 +529,7 @@ function Dashboard() {
           }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 786px) {
           .nav-bar {
             flex-direction: column;
             align-items: flex-start;
@@ -514,7 +556,7 @@ function Dashboard() {
           }
 
           .left-sidebar {
-            width: 75%;
+            width: 30vw;
             min-width: unset;
           }
 
@@ -570,7 +612,7 @@ function Dashboard() {
           }
 
           .left-sidebar {
-            width: 85%;
+            width: 50%;
           }
 
           .center-middle-div-1 {
@@ -587,7 +629,7 @@ function Dashboard() {
 
       <div className="main-section">
         {isSidebarOpen && (
-          <div className="left-sidebar">
+          <div className="left-sidebar" ref={sidebarRef}>
             <div className="left-sidebar-inner-1">
               <img className="upper-div-img" src={logo} alt="logo" />
 
@@ -657,6 +699,7 @@ function Dashboard() {
           <div className="nav-bar">
             <div className="nav-left">
               <img
+                ref={hamburgerRef}
                 className="hamburger-btn"
                 src={hamburger}
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
