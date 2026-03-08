@@ -464,8 +464,10 @@ const handleSubmit = async () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        username: form.email,      // using email as admin username
-        password: form.password,
+      firstName: form.firstName,
+      lastName: form.lastName,
+      username: form.email,
+      password: form.password,
       }),
     });
 

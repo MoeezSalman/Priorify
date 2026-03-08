@@ -375,12 +375,12 @@ export default function Login() {
 
     if (!res.ok) {
       setErrors((prev) => ({
-        ...prev,
-        password: data.message || "Login failed",
+      ...prev,
+      password: data.message || "Login failed",
       }));
       return;
     }
-
+    localStorage.setItem("loggedInUser", JSON.stringify(data.admin));
     setSubmitted(true);
     setTimeout(() => navigate("/dashboard"), 800);
     // Later: navigate to dashboard
