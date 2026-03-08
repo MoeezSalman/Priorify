@@ -35,8 +35,6 @@ function DonutChart() {
   const negOffset = posOffset - posLen - gap;
   const neuOffset = negOffset - negLen - gap;
 
-  const navigate = useNavigate();
-
   return (
     <svg width={DONUT_SIZE} height={DONUT_SIZE} style={{ transform: "rotate(-90deg)" }}>
       <circle cx={DONUT_SIZE/2} cy={DONUT_SIZE/2} r={R} fill="none" stroke="#f0f0f0" strokeWidth={STROKE} />
@@ -69,16 +67,20 @@ const LeftSideBar = {
     flexDirection:"column",
     height:"100vh",
     width:"15vw",
+    minWidth: "200px",
     backgroundColor:"#1a1f2e",
     position:"fixed",
     left:"0",
+    top: 0,
+    zIndex: 1000,
     overflow:"hidden",
 }
 
 const UpperDivImg = {
     paddingTop:"10px",
-    width:"255px",
-    height:"115px"
+    width:"100%",
+    maxWidth:"255px",
+    height:"auto",
 }
 
 const MiddleDiv = {
@@ -127,7 +129,8 @@ const LowerInnerDiv1 = {
     alignItems: "center",
     justifyContent: "center",
     fontWeight: "bold",
-    fontSize: "14px"
+    fontSize: "14px",
+    flexShrink: 0,
 }
 
 const hrLine = {
@@ -142,7 +145,9 @@ const hamburgerBtn = {
     border: "none",
     cursor: "pointer",
     width:"40px",
-    height:"40px"
+    height:"40px",
+    padding: 0,
+    flexShrink: 0,
 }
 
 export default function FeatureGraphs() {
@@ -168,7 +173,7 @@ export default function FeatureGraphs() {
     const navigate = useNavigate();
   
     const [activeState,setActiveState] = useState("graph")
-      const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <>
@@ -183,7 +188,6 @@ export default function FeatureGraphs() {
   .fg-page *, .fg-page *::before, .fg-page *::after {
     box-sizing: border-box;
   }
-  /* Override Vite's body flex only when this page is active */
   body:has(.fg-page) {
     display: block !important;
     background: #f5f6fa !important;
@@ -192,10 +196,90 @@ export default function FeatureGraphs() {
     width: 100% !important;
     min-height: 100vh !important;
   }
+
+  /* Sidebar overlay for mobile */
+  .fg-sidebar-overlay {
+    display: none;
+  }
+
+  /* Responsive breakpoints */
+  @media (max-width: 1024px) {
+    .fg-stat-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
+    .fg-middle-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .fg-page {
+      padding: 14px 16px !important;
+    }
+    .fg-stat-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 12px !important;
+    }
+    .fg-stat-card {
+      padding: 12px 14px !important;
+    }
+    .fg-stat-value {
+      font-size: 22px !important;
+    }
+    .fg-header-title {
+      font-size: 20px !important;
+    }
+    .fg-sidebar-overlay {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 999;
+    }
+    .fg-sidebar {
+      width: 220px !important;
+      min-width: unset !important;
+    }
+    .fg-sentiment-inner {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .fg-stat-grid {
+      grid-template-columns: 1fr 1fr !important;
+      gap: 10px !important;
+    }
+    .fg-stat-value {
+      font-size: 20px !important;
+    }
+    .fg-stat-label {
+      font-size: 10px !important;
+    }
+    .fg-page {
+      padding: 12px !important;
+    }
+    .fg-card {
+      padding: 14px 16px !important;
+    }
+    .fg-trend-legends {
+      flex-wrap: wrap !important;
+      gap: 10px !important;
+    }
+  }
 `}</style>
 
+      {/* Overlay for mobile when sidebar is open */}
       {isSidebarOpen && (
-        <div style={LeftSideBar}>
+        <div
+          className="fg-sidebar-overlay"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {isSidebarOpen && (
+        <div style={LeftSideBar} className="fg-sidebar">
     
           <div style={LeftSideInnerDiv1}>
               <img style={UpperDivImg} src={logo} alt="logo" />
@@ -223,9 +307,9 @@ export default function FeatureGraphs() {
                       {getInitials(name)}
                   </div>
     
-                  <div className="LowerInnerDiv2">
-                      <h4 id="LowerInnerHeading1">{name}</h4>
-                      <p id="LowerInnerText">Project Manager</p>
+                  <div className="LowerInnerDiv2" style={{ overflow: "hidden" }}>
+                      <h4 id="LowerInnerHeading1" style={{ margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</h4>
+                      <p id="LowerInnerText" style={{ margin: 0 }}>Project Manager</p>
                   </div>
     
                 </div>
@@ -234,52 +318,71 @@ export default function FeatureGraphs() {
         </div>
       )}
 
-      {/* This div escapes body flex centering by being full width */}
-      <div className="fg-page" style={{width: isSidebarOpen ? "85vw" : "100vw",
-    marginLeft: isSidebarOpen ? "15vw" : "0"}}>
+      <div
+        className="fg-page"
+        style={{
+          width: isSidebarOpen ? "calc(100vw - 15vw)" : "100vw",
+          marginLeft: isSidebarOpen ? "15vw" : "0",
+          transition: "margin-left 0.2s ease, width 0.2s ease",
+        }}
+      >
 
         {/* Header */}
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div style={{ display: "flex", alignItems: "center",gap:"15px"}}>
-            <img style={hamburgerBtn} src={hamburger} onClick={() => setIsSidebarOpen(!isSidebarOpen)} alt="button" />
-            <h1 style={{ fontSize: 26, fontWeight: 700, color: "#1a1a2e", margin: 0 }}>Feature Graphs</h1>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between", flexWrap: "wrap", gap: 10}}>
+          <div style={{ display: "flex", alignItems: "center", gap:"15px"}}>
+            <img
+              style={hamburgerBtn}
+              src={hamburger}
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              alt="toggle sidebar"
+            />
+            <h1 className="fg-header-title" style={{ fontSize: 26, fontWeight: 700, color: "#1a1a2e", margin: 0 }}>Feature Graphs</h1>
           </div> 
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-
-            <button style={{ marginLeft:"auto",background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            <button style={{ background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
               Send
             </button>
           </div>
         </div>
 
         {/* Stat Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20, marginBottom: 14,paddingTop:"20px" }}>
+        <div
+          className="fg-stat-grid"
+          style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20, marginBottom: 14, paddingTop:"20px" }}
+        >
           {[
             { label: "TOTAL FEEDBACK", value: "413", sub: "Across all features", color: "#1a1a2e", dot: false },
             { label: "POSITIVE", value: "52%", sub: "214 mentions", color: "#22c55e", dot: true },
             { label: "NEGATIVE", value: "30%", sub: "124 mentions", color: "#ef4444", dot: true },
             { label: "NEUTRAL", value: "18%", sub: "75 mentions", color: "#f59e0b", dot: true },
           ].map(({ label, value, sub, color, dot }) => (
-            <div key={label} style={{ background: "#fff", borderRadius: 14, padding: "14px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-              <p style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", letterSpacing: 1, marginBottom: 8, marginTop: 0 }}>{label}</p>
-              <p style={{ fontSize: 26, fontWeight: 800, color, margin: "0 0 6px" }}>{value}</p>
+            <div
+              key={label}
+              className="fg-stat-card"
+              style={{ background: "#fff", borderRadius: 14, padding: "14px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+            >
+              <p className="fg-stat-label" style={{ fontSize: 11, fontWeight: 600, color: "#9ca3af", letterSpacing: 1, marginBottom: 8, marginTop: 0 }}>{label}</p>
+              <p className="fg-stat-value" style={{ fontSize: 26, fontWeight: 800, color, margin: "0 0 6px" }}>{value}</p>
               <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>{dot && <span style={{ color }}>● </span>}{sub}</p>
             </div>
           ))}
         </div>
 
         {/* Middle Row */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 14 }}>
+        <div
+          className="fg-middle-grid"
+          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 14 }}
+        >
           {/* Sentiment Breakdown */}
-          <div style={{ background: "#fff", borderRadius: 14, padding: "16px 22px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+          <div className="fg-card" style={{ background: "#fff", borderRadius: 14, padding: "16px 22px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14, flexWrap: "wrap", gap: 8 }}>
               <div>
                 <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a2e", margin: "0 0 4px" }}>Sentiment Breakdown</h2>
                 <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>Feedback sentiment distribution</p>
               </div>
               <span style={{ background: "#eff6ff", color: "#2563eb", fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 20 }}>413 total</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 36 }}>
+            <div className="fg-sentiment-inner" style={{ display: "flex", alignItems: "center", gap: 36 }}>
               <div style={{ position: "relative", width: DONUT_SIZE, height: DONUT_SIZE, flexShrink: 0 }}>
                 <DonutChart />
                 <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
@@ -304,8 +407,8 @@ export default function FeatureGraphs() {
           </div>
 
           {/* Priority Breakdown */}
-          <div style={{ background: "#fff", borderRadius: 14, padding: "24px 28px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+          <div className="fg-card" style={{ background: "#fff", borderRadius: 14, padding: "24px 28px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
               <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a2e", margin: 0 }}>Priority Breakdown</h2>
               <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} style={selectStyle}>
                 <option>All Time</option>
@@ -320,8 +423,8 @@ export default function FeatureGraphs() {
         </div>
 
         {/* Sentiment Trend */}
-        <div style={{ background: "#fff", borderRadius: 14, padding: "24px 28px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <div className="fg-card" style={{ background: "#fff", borderRadius: 14, padding: "24px 28px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 8 }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: "#1a1a2e", margin: 0 }}>Sentiment Trend Over Time</h2>
             <select value={trendFilter} onChange={(e) => setTrendFilter(e.target.value)} style={selectStyle}>
               <option>Monthly</option>
@@ -329,7 +432,7 @@ export default function FeatureGraphs() {
               <option>Daily</option>
             </select>
           </div>
-          <div style={{ display: "flex", gap: 20, marginBottom: 16 }}>
+          <div className="fg-trend-legends" style={{ display: "flex", gap: 20, marginBottom: 16 }}>
             {[{ label: "Positive Sentiment", color: "#2563eb" }, { label: "Negative Sentiment", color: "#ef4444" }].map(({ label, color }) => (
               <div key={label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 28, height: 3, background: color, borderRadius: 2 }} />
