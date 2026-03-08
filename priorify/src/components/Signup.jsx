@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
 
@@ -12,13 +13,13 @@ const styles = `
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 16px;
   }
 
   .card {
     display: flex;
     width: 860px;
-    max-width: 98vw;
-    min-height: 580px;
+    max-width: 100%;
     background: #fff;
     border-radius: 24px;
     overflow: hidden;
@@ -36,6 +37,7 @@ const styles = `
     justify-content: space-between;
     padding: 28px 28px 32px;
     overflow: hidden;
+    flex-shrink: 0;
   }
 
   .left-logo-row {
@@ -52,6 +54,7 @@ const styles = `
     background: #6c5ce7;
     border-radius: 9px;
     display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
   }
 
   .left-logo-icon svg { width: 18px; height: 18px; }
@@ -220,6 +223,7 @@ const styles = `
     padding: 28px 36px 20px;
     display: flex;
     flex-direction: column;
+    min-width: 0;
   }
 
   .form-title {
@@ -270,6 +274,7 @@ const styles = `
     background: #faf9ff;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
   }
 
   .field input::placeholder { color: #c4bfdf; }
@@ -415,6 +420,97 @@ const styles = `
   }
 
   .success-sub { font-size: 13px; color: #9a97b0; }
+
+  /* ─── RESPONSIVE ─── */
+
+  @media (max-width: 680px) {
+    body {
+      padding: 0;
+      align-items: flex-start;
+    }
+
+    .card {
+      flex-direction: column;
+      width: 100%;
+      max-width: 100%;
+      border-radius: 0;
+      min-height: 100vh;
+      box-shadow: none;
+    }
+
+    /* Left panel becomes a slim top banner */
+    .left-panel {
+      width: 100%;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 16px 20px;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+
+    .left-panel::before {
+      top: -50px; left: -50px;
+      width: 150px; height: 150px;
+    }
+
+    .left-panel::after {
+      bottom: -40px; right: -40px;
+      width: 120px; height: 120px;
+    }
+
+    /* Hide decorative card and tagline in banner mode */
+    .left-center { display: none; }
+
+    /* Logo stays visible */
+    .left-logo-row {
+      align-self: center;
+      margin-bottom: 0;
+    }
+
+    /* Show a compact tagline inline in banner */
+    .left-panel-tagline {
+      font-size: 12.5px;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.4;
+      position: relative;
+      z-index: 2;
+    }
+
+    .left-panel-tagline strong {
+      color: #fff;
+    }
+
+    .right-panel {
+      flex: 1;
+      padding: 24px 20px 28px;
+    }
+
+    .form-title { font-size: 22px; }
+
+    /* Stack first/last name on mobile */
+    .row-2 {
+      flex-direction: column;
+      gap: 0;
+      margin-bottom: 0;
+    }
+
+    .row-2 .field {
+      margin-bottom: 10px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .right-panel {
+      padding: 20px 16px 24px;
+    }
+
+    .form-title { font-size: 20px; }
+
+    .field input { height: 42px; font-size: 14px; }
+
+    .btn-submit { height: 46px; font-size: 14px; }
+  }
 `;
 
 const SKILLS = [
@@ -422,6 +518,7 @@ const SKILLS = [
   { label: "Research", width: "55%" },
   { label: "Dev", width: "38%" },
 ];
+
 const API_BASE = "http://localhost:5000";
 
 export default function TaskySignup() {
@@ -450,55 +547,49 @@ export default function TaskySignup() {
     setErrors((er) => ({ ...er, [field]: undefined }));
   };
 
-const handleSubmit = async () => {
-  const e = validate();
-  if (Object.keys(e).length) {
-    setErrors(e);
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/signup`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-      firstName: form.firstName,
-      lastName: form.lastName,
-      username: form.email,
-      password: form.password,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      // show backend error on UI
-      setErrors((prev) => ({
-        ...prev,
-        email: data.message || "Signup failed",
-      }));
+  const handleSubmit = async () => {
+    const e = validate();
+    if (Object.keys(e).length) {
+      setErrors(e);
       return;
     }
 
-    // success
-    // success
+    setLoading(true);
 
-    localStorage.setItem("loggedInUser", JSON.stringify(data.admin));
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: form.firstName,
+          lastName: form.lastName,
+          username: form.email,
+          password: form.password,
+        }),
+      });
 
-    setSubmitted(true);
-    setTimeout(() => navigate("/dashboard"), 1200);
-  } catch {
-    setErrors((prev) => ({
-      ...prev,
-      email: "Backend not reachable (check server running on 5000)",
-    }));
-  } finally {
-    setLoading(false);
-    
-  }
-};
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrors((prev) => ({
+          ...prev,
+          email: data.message || "Signup failed",
+        }));
+        return;
+      }
+
+      localStorage.setItem("loggedInUser", JSON.stringify(data.admin));
+      setSubmitted(true);
+      setTimeout(() => navigate("/dashboard"), 1200);
+    } catch {
+      setErrors((prev) => ({
+        ...prev,
+        email: "Backend not reachable (check server running on 5000)",
+      }));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -515,42 +606,43 @@ const handleSubmit = async () => {
             </div>
             <span className="left-logo-name">Priorify</span>
           </div>
+
           <div className="left-center">
-          <div className="profile-card">
-            <div className="profile-header">
-              <div className="avatar">🧑</div>
-              <div>
-                <div className="profile-name">Mirha Fatima</div>
-                <div className="profile-role">Project Manager</div>
-              </div>
-              <div className="check-badge">
-                <svg viewBox="0 0 14 14" fill="none">
-                  <path d="M2.5 7l3 3 6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-            </div>
-            <div className="stats-row">
-              <div className="stat-box">
-                <div className="stat-num">50+</div>
-                <div className="stat-label">Projects</div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-num">120</div>
-                <div className="stat-label">Tasks Done</div>
-              </div>
-            </div>
-            {SKILLS.map((s) => (
-              <div className="skill-row" key={s.label}>
-                <div className="skill-label"><span>{s.label}</span></div>
-                <div className="skill-bar-bg">
-                  <div className="skill-bar-fill" style={{ width: s.width }} />
+            <div className="profile-card">
+              <div className="profile-header">
+                <div className="avatar">🧑</div>
+                <div>
+                  <div className="profile-name">Mirha Fatima</div>
+                  <div className="profile-role">Project Manager</div>
+                </div>
+                <div className="check-badge">
+                  <svg viewBox="0 0 14 14" fill="none">
+                    <path d="M2.5 7l3 3 6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </div>
               </div>
-            ))}
-          </div>
-          <div className="left-text">
-            <p>Join thousands managing tasks in an <strong>easy and efficient way</strong> with Priorify.</p>
-          </div>
+              <div className="stats-row">
+                <div className="stat-box">
+                  <div className="stat-num">50+</div>
+                  <div className="stat-label">Projects</div>
+                </div>
+                <div className="stat-box">
+                  <div className="stat-num">120</div>
+                  <div className="stat-label">Tasks Done</div>
+                </div>
+              </div>
+              {SKILLS.map((s) => (
+                <div className="skill-row" key={s.label}>
+                  <div className="skill-label"><span>{s.label}</span></div>
+                  <div className="skill-bar-bg">
+                    <div className="skill-bar-fill" style={{ width: s.width }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="left-text">
+              <p>Join thousands managing tasks in an <strong>easy and efficient way</strong> with Priorify.</p>
+            </div>
           </div>
         </div>
 
