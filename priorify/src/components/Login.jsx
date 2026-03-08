@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
 
@@ -12,13 +13,13 @@ const styles = `
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 16px;
   }
 
   .card {
     display: flex;
     width: 820px;
-    max-width: 98vw;
-    height: 520px;
+    max-width: 100%;
     background: #fff;
     border-radius: 24px;
     overflow: hidden;
@@ -31,6 +32,7 @@ const styles = `
     padding: 36px 44px 28px;
     display: flex;
     flex-direction: column;
+    min-width: 0;
   }
 
   .logo-row {
@@ -45,6 +47,7 @@ const styles = `
     background: #6c5ce7;
     border-radius: 9px;
     display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
   }
 
   .logo-icon svg { width: 18px; height: 18px; }
@@ -121,14 +124,21 @@ const styles = `
     margin-bottom: 24px;
   }
 
-  .forgot-row a {
+  .forgot-row a,
+  .forgot-btn {
     font-size: 12.5px;
     color: #6c5ce7;
     font-weight: 500;
     text-decoration: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-family: 'DM Sans', sans-serif;
   }
 
-  .forgot-row a:hover { text-decoration: underline; }
+  .forgot-row a:hover,
+  .forgot-btn:hover { text-decoration: underline; }
 
   .btn-submit {
     width: 100%;
@@ -182,6 +192,7 @@ const styles = `
     padding: 36px 28px;
     overflow: hidden;
     gap: 24px;
+    flex-shrink: 0;
   }
 
   .right-panel::before {
@@ -207,7 +218,7 @@ const styles = `
     background: rgba(255,255,255,0.07);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 18px;
-    padding: 20px 20px;
+    padding: 20px;
     width: 100%;
     max-width: 240px;
     position: relative;
@@ -249,13 +260,6 @@ const styles = `
   .task-check.empty {
     background: rgba(255,255,255,0.08);
     border: 1.5px solid rgba(255,255,255,0.15);
-  }
-
-  .task-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.35);
-    flex-shrink: 0;
   }
 
   .task-bar {
@@ -328,6 +332,92 @@ const styles = `
   }
 
   .success-sub { font-size: 13px; color: #9a97b0; }
+
+  /* ─── RESPONSIVE ─── */
+
+  /* Tablet: hide decorative right panel, keep it compact */
+  @media (max-width: 680px) {
+    body {
+      padding: 0;
+      align-items: flex-start;
+    }
+
+    .card {
+      flex-direction: column;
+      width: 100%;
+      max-width: 100%;
+      border-radius: 0;
+      min-height: 100vh;
+      box-shadow: none;
+    }
+
+    /* Right panel becomes a slim top banner on mobile */
+    .right-panel {
+      width: 100%;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      padding: 18px 24px;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .right-panel::before {
+      top: -60px; right: -60px;
+      width: 160px; height: 160px;
+    }
+
+    .right-panel::after {
+      bottom: -40px; left: -40px;
+      width: 130px; height: 130px;
+    }
+
+    /* Hide task card on mobile banner */
+    .task-card { display: none; }
+
+    .right-text {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Show a small logo icon in banner */
+    .right-text::before {
+      content: '';
+      display: inline-block;
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+
+    .right-text p {
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .left-panel {
+      flex: 1;
+      padding: 28px 24px 32px;
+    }
+
+    .logo-row { margin-bottom: 24px; }
+
+    .form-title { font-size: 24px; }
+  }
+
+  /* Small phones */
+  @media (max-width: 400px) {
+    .left-panel {
+      padding: 24px 18px 28px;
+    }
+
+    .form-title { font-size: 22px; }
+
+    .field input { height: 44px; font-size: 14px; }
+
+    .btn-submit { height: 46px; font-size: 14px; }
+  }
 `;
 
 const TASKS = [
@@ -336,7 +426,9 @@ const TASKS = [
   { done: false, width: "62%", label: "Code" },
   { done: false, width: "45%", label: "Test" },
 ];
+
 const API_BASE = "http://localhost:5000";
+
 export default function Login() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -356,143 +448,73 @@ export default function Login() {
     setErrors((er) => ({ ...er, [field]: undefined }));
   };
 
- const handleSubmit = async () => {
-  const e = validate();
-  if (Object.keys(e).length) { setErrors(e); return; }
+  const handleSubmit = async () => {
+    const e = validate();
+    if (Object.keys(e).length) { setErrors(e); return; }
 
-  setLoading(true);
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: form.email,      // email used as username
-        password: form.password,
-      }),
-    });
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: form.email,
+          password: form.password,
+        }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
+      if (!res.ok) {
+        setErrors((prev) => ({
+          ...prev,
+          password: data.message || "Login failed",
+        }));
+        return;
+      }
+      localStorage.setItem("loggedInUser", JSON.stringify(data.admin));
+      setSubmitted(true);
+      setTimeout(() => navigate("/dashboard"), 800);
+    } catch (err) {
       setErrors((prev) => ({
-      ...prev,
-      password: data.message || "Login failed",
+        ...prev,
+        password: "Backend not reachable (check server running on 5000)",
       }));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!form.email) {
+      setErrors((p) => ({ ...p, email: "Enter email first." }));
       return;
     }
-    localStorage.setItem("loggedInUser", JSON.stringify(data.admin));
-    setSubmitted(true);
-    setTimeout(() => navigate("/dashboard"), 800);
-    // Later: navigate to dashboard
-  } catch (err) {
-    setErrors((prev) => ({
-      ...prev,
-      password: "Backend not reachable (check server running on 5000)",
-    }));
-  } finally {
-    setLoading(false);
-  }
-};
+
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: form.email }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrors((p) => ({ ...p, email: data.message || "Failed to send OTP" }));
+        return;
+      }
+
+      navigate("/forgot", { state: { email: form.email } });
+    } catch {
+      setErrors((p) => ({ ...p, email: "Backend not reachable" }));
+    }
+  };
 
   return (
     <>
       <style>{styles}</style>
       <div className="card">
-        {/* LEFT */}
-        <div className="left-panel">
-          <div className="logo-row">
-            <div className="logo-icon">
-              <svg viewBox="0 0 20 20" fill="none">
-                <rect x="3" y="3" width="14" height="14" rx="3" fill="white" fillOpacity="0.9"/>
-                <path d="M7 10l2.5 2.5L13 7" stroke="#6c5ce7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <span className="logo-name">Priorify</span>
-          </div>
-
-          {submitted ? (
-            <div className="success-overlay">
-              <div className="success-icon">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                  <path d="M6 16l7 7 13-13" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div className="success-title">Welcome Back! 👋</div>
-              <div className="success-sub">You're signed in successfully.<br/>Redirecting to your dashboard…</div>
-            </div>
-          ) : (
-            <>
-              <div className="form-title">Welcome Back!</div>
-              <div className="form-sub">Please enter login details below</div>
-
-              <div className="field">
-                <label>Email</label>
-                <input
-                  type="email" placeholder="Enter the email"
-                  value={form.email} onChange={handleChange("email")}
-                  className={errors.email ? "error" : ""}
-                  autoComplete="off"
-                />
-                {errors.email && <div className="error-msg">{errors.email}</div>}
-              </div>
-
-              <div className="field">
-                <label>Password</label>
-                <input
-                  type="password" placeholder="Enter the Password"
-                  value={form.password} onChange={handleChange("password")}
-                  className={errors.password ? "error" : ""}
-                  autoComplete="new-password"
-                />
-                {errors.password && <div className="error-msg">{errors.password}</div>}
-              </div>
-
-              <div className="forgot-row">
-  <button
-    type="button"
-    style={{ background: "transparent", border: "none", color: "#6c5ce7", cursor: "pointer" }}
-    onClick={async () => {
-      if (!form.email) {
-        setErrors((p) => ({ ...p, email: "Enter email first." }));
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API_BASE}/api/admin/forgot-password`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: form.email }),
-        });
-        const data = await res.json();
-
-        if (!res.ok) {
-          setErrors((p) => ({ ...p, email: data.message || "Failed to send OTP" }));
-          return;
-        }
-
-        // ✅ pass email to forgot screen
-        navigate("/forgot", { state: { email: form.email } });
-      } catch {
-        setErrors((p) => ({ ...p, email: "Backend not reachable" }));
-      }
-    }}
-  >
-    Forgot password?
-  </button>
-</div>
-
-              <button className="btn-submit" onClick={handleSubmit} disabled={loading}>
-                {loading ? "Signing in…" : "Sign in"}
-              </button>
-
-              <div className="signup-row">
-                Don't have an account? <a href="./Signup">Sign Up</a>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* RIGHT */}
+        {/* RIGHT PANEL — comes first in DOM so it appears on top on mobile */}
         <div className="right-panel">
           <div className="task-card">
             <div className="check-float">
@@ -522,6 +544,80 @@ export default function Login() {
           <div className="right-text">
             <p>Manage your tasks in an <strong>easy and more efficient way</strong> with Priorify.</p>
           </div>
+        </div>
+
+        {/* LEFT PANEL */}
+        <div className="left-panel">
+          <div className="logo-row">
+            <div className="logo-icon">
+              <svg viewBox="0 0 20 20" fill="none">
+                <rect x="3" y="3" width="14" height="14" rx="3" fill="white" fillOpacity="0.9"/>
+                <path d="M7 10l2.5 2.5L13 7" stroke="#6c5ce7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <span className="logo-name">Priorify</span>
+          </div>
+
+          {submitted ? (
+            <div className="success-overlay">
+              <div className="success-icon">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                  <path d="M6 16l7 7 13-13" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="success-title">Welcome Back! 👋</div>
+              <div className="success-sub">You're signed in successfully.<br/>Redirecting to your dashboard…</div>
+            </div>
+          ) : (
+            <>
+              <div className="form-title">Welcome Back!</div>
+              <div className="form-sub">Please enter login details below</div>
+
+              <div className="field">
+                <label>Email</label>
+                <input
+                  type="email"
+                  placeholder="Enter the email"
+                  value={form.email}
+                  onChange={handleChange("email")}
+                  className={errors.email ? "error" : ""}
+                  autoComplete="off"
+                />
+                {errors.email && <div className="error-msg">{errors.email}</div>}
+              </div>
+
+              <div className="field">
+                <label>Password</label>
+                <input
+                  type="password"
+                  placeholder="Enter the Password"
+                  value={form.password}
+                  onChange={handleChange("password")}
+                  className={errors.password ? "error" : ""}
+                  autoComplete="new-password"
+                />
+                {errors.password && <div className="error-msg">{errors.password}</div>}
+              </div>
+
+              <div className="forgot-row">
+                <button
+                  type="button"
+                  className="forgot-btn"
+                  onClick={handleForgotPassword}
+                >
+                  Forgot password?
+                </button>
+              </div>
+
+              <button className="btn-submit" onClick={handleSubmit} disabled={loading}>
+                {loading ? "Signing in…" : "Sign in"}
+              </button>
+
+              <div className="signup-row">
+                Don't have an account? <a href="./Signup">Sign Up</a>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>
