@@ -483,8 +483,12 @@ const handleSubmit = async () => {
     }
 
     // success
+    // success
+
+    localStorage.setItem("loggedInUser", JSON.stringify(data.admin));
+
     setSubmitted(true);
-     setTimeout(() => navigate("/dashboard"), 1200);
+    setTimeout(() => navigate("/dashboard"), 1200);
   } catch {
     setErrors((prev) => ({
       ...prev,
