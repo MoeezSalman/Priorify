@@ -20,6 +20,7 @@ const styles = `
     display: flex;
     width: 860px;
     max-width: 100%;
+    min-height: 580px;
     background: #fff;
     border-radius: 24px;
     overflow: hidden;
@@ -54,7 +55,6 @@ const styles = `
     background: #6c5ce7;
     border-radius: 9px;
     display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
   }
 
   .left-logo-icon svg { width: 18px; height: 18px; }
@@ -223,7 +223,7 @@ const styles = `
     padding: 28px 36px 20px;
     display: flex;
     flex-direction: column;
-    min-width: 0;
+    overflow-y: auto;
   }
 
   .form-title {
@@ -274,7 +274,6 @@ const styles = `
     background: #faf9ff;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
-    width: 100%;
   }
 
   .field input::placeholder { color: #c4bfdf; }
@@ -421,95 +420,92 @@ const styles = `
 
   .success-sub { font-size: 13px; color: #9a97b0; }
 
-  /* ─── RESPONSIVE ─── */
-
-  @media (max-width: 680px) {
-    body {
-      padding: 0;
-      align-items: flex-start;
-    }
+  /* ── MOBILE RESPONSIVE ── */
+  @media (max-width: 640px) {
+    body { padding: 0; align-items: stretch; }
 
     .card {
       flex-direction: column;
       width: 100%;
-      max-width: 100%;
+      min-height: 100dvh;
       border-radius: 0;
-      min-height: 100vh;
       box-shadow: none;
     }
 
-    /* Left panel becomes a slim top banner */
+    /* Left panel becomes a compact header strip on mobile */
     .left-panel {
       width: 100%;
       flex-direction: row;
+      justify-content: space-between;
       align-items: center;
-      justify-content: flex-start;
-      padding: 16px 20px;
-      gap: 14px;
+      padding: 18px 20px;
+      min-height: auto;
       flex-shrink: 0;
+      gap: 14px;
     }
 
     .left-panel::before {
       top: -50px; left: -50px;
-      width: 150px; height: 150px;
+      width: 160px; height: 160px;
     }
 
     .left-panel::after {
       bottom: -40px; right: -40px;
-      width: 120px; height: 120px;
+      width: 130px; height: 130px;
     }
 
-    /* Hide decorative card and tagline in banner mode */
+    /* Hide the decorative profile card on mobile — show only logo + tagline */
     .left-center { display: none; }
 
-    /* Logo stays visible */
-    .left-logo-row {
-      align-self: center;
-      margin-bottom: 0;
-    }
+    .left-logo-row { align-self: auto; }
 
-    /* Show a compact tagline inline in banner */
-    .left-panel-tagline {
-      font-size: 12.5px;
-      color: rgba(255,255,255,0.6);
-      line-height: 1.4;
+    .left-text-mobile {
+      flex: 1;
+      text-align: right;
       position: relative;
       z-index: 2;
     }
 
-    .left-panel-tagline strong {
-      color: #fff;
+    .left-text-mobile p {
+      font-size: 11.5px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.5;
     }
 
+    .left-text-mobile strong { color: #fff; font-weight: 600; }
+
+    /* Right panel (form) takes full remaining space */
     .right-panel {
       flex: 1;
-      padding: 24px 20px 28px;
+      padding: 24px 20px 20px;
+      overflow-y: auto;
     }
 
     .form-title { font-size: 22px; }
+    .form-sub { font-size: 12px; margin-bottom: 14px; }
 
-    /* Stack first/last name on mobile */
-    .row-2 {
-      flex-direction: column;
-      gap: 0;
-      margin-bottom: 0;
-    }
+    .row-2 { flex-direction: column; gap: 0; margin-bottom: 0; }
+    .row-2 .field { margin-bottom: 10px; }
 
-    .row-2 .field {
-      margin-bottom: 10px;
-    }
+    .field { margin-bottom: 10px; }
+    .field input { height: 42px; font-size: 13px; }
+
+    .terms-row { margin: 8px 0 12px; }
+    .terms-text { font-size: 12px; }
+
+    .btn-submit { height: 44px; font-size: 14px; }
+
+    .signin-row { padding-top: 10px; }
   }
 
-  @media (max-width: 400px) {
-    .right-panel {
-      padding: 20px 16px 24px;
-    }
-
-    .form-title { font-size: 20px; }
-
-    .field input { height: 42px; font-size: 14px; }
-
-    .btn-submit { height: 46px; font-size: 14px; }
+  /* Tablet */
+  @media (min-width: 641px) and (max-width: 860px) {
+    .card { width: 100%; }
+    .left-panel { width: 38%; padding: 24px 20px 28px; }
+    .profile-card { max-width: 200px; padding: 14px 16px; }
+    .right-panel { padding: 24px 28px 18px; }
+    .form-title { font-size: 22px; }
+    .stat-num { font-size: 16px; }
   }
 `;
 
@@ -549,13 +545,9 @@ export default function TaskySignup() {
 
   const handleSubmit = async () => {
     const e = validate();
-    if (Object.keys(e).length) {
-      setErrors(e);
-      return;
-    }
+    if (Object.keys(e).length) { setErrors(e); return; }
 
     setLoading(true);
-
     try {
       const res = await fetch(`${API_BASE}/api/admin/signup`, {
         method: "POST",
@@ -571,10 +563,7 @@ export default function TaskySignup() {
       const data = await res.json();
 
       if (!res.ok) {
-        setErrors((prev) => ({
-          ...prev,
-          email: data.message || "Signup failed",
-        }));
+        setErrors((prev) => ({ ...prev, email: data.message || "Signup failed" }));
         return;
       }
 
@@ -607,6 +596,7 @@ export default function TaskySignup() {
             <span className="left-logo-name">Priorify</span>
           </div>
 
+          {/* Shown only on desktop — hidden on mobile via CSS */}
           <div className="left-center">
             <div className="profile-card">
               <div className="profile-header">
