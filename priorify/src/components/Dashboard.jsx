@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import logo from '../assets/logo.png'
 import chat from '../assets/chat_bubble.png'
 import totalFeedback from '../assets/totalFeedback.png'
@@ -364,6 +364,13 @@ const navLeft = {
 
 function Dashboard() {
 
+    const API_BASE = "http://localhost:5000";
+
+    const [stats, setStats] = useState({
+    totalFeedback: 0,
+    positiveSentiment: 0,
+    unresolvedItems: 0,
+    });
     const [activeState,setActiveState] = useState("dashboard")
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -394,6 +401,25 @@ function Dashboard() {
         const last=words[1]?.[0] || "";
         return (first + last).toUpperCase();
     }
+
+    useEffect(() => {
+    const fetchStats = async () => {
+        try {
+        const res = await fetch(`${API_BASE}/api/feedback/stats`);
+        const data = await res.json();
+
+        if (!res.ok) {
+            console.error(data.message || "Failed to fetch feedback stats");
+            return;
+        }
+
+        setStats(data);
+        } catch (err) {
+        console.error("Error fetching feedback stats:", err);
+        }
+    };
+    fetchStats();
+    }, []);
 
     let name="JOE MAX";
     let today=new Date();
@@ -482,7 +508,7 @@ function Dashboard() {
                         <div style={{...centerDiv, width : isSidebarOpen ? "1105px" : "1360px"}}>
                             <div style={box1}>
                                 <div className="innerbox1">
-                                    <h2 id="innerbox1Heading">1,248</h2>
+                                    <h2 id="innerbox1Heading">{stats.totalFeedback}</h2>
                                     <p id="innerbox1Text">Total Feedback Received</p>
                                 </div>
                                 <img style={innerbox1Img} src={totalFeedback} alt="" />
@@ -490,7 +516,7 @@ function Dashboard() {
                             
                             <div style={box2}>
                                 <div className="innerbox2">
-                                    <h2 id="innerbox2Heading">68%</h2>
+                                    <h2 id="innerbox2Heading">{stats.positiveSentiment}%</h2>
                                     <p id="innerbox2Text">Positive Sentiment</p>
                                 </div>
                                 <img style={innerbox2Img} src={emoji} alt="" />
@@ -498,7 +524,7 @@ function Dashboard() {
                             
                             <div style={box3}>
                                 <div className="innerbox3">
-                                    <h2 id="innerbox3Heading">47</h2>
+                                    <h2 id="innerbox3Heading">{stats.unresolvedItems}</h2>
                                     <p id="innerbox3Text">Unresolved Items</p>
                                 </div>
                                 <img style={innerbox3Img} src={unresolved} alt="" />
