@@ -20,6 +20,7 @@ const styles = `
     display: flex;
     width: 820px;
     max-width: 100%;
+    height: 520px;
     background: #fff;
     border-radius: 24px;
     overflow: hidden;
@@ -32,7 +33,7 @@ const styles = `
     padding: 36px 44px 28px;
     display: flex;
     flex-direction: column;
-    min-width: 0;
+    overflow-y: auto;
   }
 
   .logo-row {
@@ -124,20 +125,17 @@ const styles = `
     margin-bottom: 24px;
   }
 
-  .forgot-row a,
   .forgot-btn {
+    background: transparent;
+    border: none;
     font-size: 12.5px;
     color: #6c5ce7;
     font-weight: 500;
-    text-decoration: none;
-    background: transparent;
-    border: none;
     cursor: pointer;
-    padding: 0;
     font-family: 'DM Sans', sans-serif;
+    padding: 0;
   }
 
-  .forgot-row a:hover,
   .forgot-btn:hover { text-decoration: underline; }
 
   .btn-submit {
@@ -333,37 +331,33 @@ const styles = `
 
   .success-sub { font-size: 13px; color: #9a97b0; }
 
-  /* ─── RESPONSIVE ─── */
-
-  /* Tablet: hide decorative right panel, keep it compact */
-  @media (max-width: 680px) {
-    body {
-      padding: 0;
-      align-items: flex-start;
-    }
+  /* ── MOBILE RESPONSIVE ── */
+  @media (max-width: 640px) {
+    body { padding: 0; align-items: stretch; }
 
     .card {
       flex-direction: column;
       width: 100%;
-      max-width: 100%;
+      height: 100dvh;
       border-radius: 0;
-      min-height: 100vh;
       box-shadow: none;
     }
 
-    /* Right panel becomes a slim top banner on mobile */
+    /* Right panel becomes a compact header strip on mobile */
     .right-panel {
       width: 100%;
       flex-direction: row;
-      justify-content: center;
+      justify-content: space-between;
       align-items: center;
-      padding: 18px 24px;
+      padding: 20px 24px;
       gap: 16px;
       flex-shrink: 0;
+      height: auto;
+      min-height: 120px;
     }
 
     .right-panel::before {
-      top: -60px; right: -60px;
+      top: -50px; right: -50px;
       width: 160px; height: 160px;
     }
 
@@ -372,51 +366,58 @@ const styles = `
       width: 130px; height: 130px;
     }
 
-    /* Hide task card on mobile banner */
-    .task-card { display: none; }
-
-    .right-text {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    /* Show a small logo icon in banner */
-    .right-text::before {
-      content: '';
-      display: inline-block;
-      width: 36px; height: 36px;
-      background: rgba(255,255,255,0.12);
-      border-radius: 10px;
+    .task-card {
+      max-width: 180px;
+      padding: 14px 14px;
       flex-shrink: 0;
     }
 
-    .right-text p {
-      font-size: 13px;
-      text-align: left;
+    .check-float {
+      width: 26px; height: 26px;
+      top: -10px; right: -10px;
     }
 
+    .task-item { margin-bottom: 8px; gap: 7px; }
+
+    .task-check { width: 16px; height: 16px; border-radius: 4px; }
+    .task-check svg { width: 9px; height: 9px; }
+
+    .task-label { font-size: 10px; min-width: 36px; }
+
+    .task-bar { height: 5px; }
+
+    .right-text { flex: 1; text-align: left; }
+    .right-text p { font-size: 12px; }
+
+    /* Left panel takes remaining space */
     .left-panel {
       flex: 1;
-      padding: 28px 24px 32px;
+      padding: 28px 24px 24px;
+      overflow-y: auto;
     }
 
-    .logo-row { margin-bottom: 24px; }
-
-    .form-title { font-size: 24px; }
-  }
-
-  /* Small phones */
-  @media (max-width: 400px) {
-    .left-panel {
-      padding: 24px 18px 28px;
-    }
+    .logo-row { margin-bottom: 20px; }
 
     .form-title { font-size: 22px; }
+    .form-sub { font-size: 12px; margin-bottom: 20px; }
 
-    .field input { height: 44px; font-size: 14px; }
+    .field { margin-bottom: 12px; }
+    .field input { height: 42px; font-size: 13px; }
 
-    .btn-submit { height: 46px; font-size: 14px; }
+    .forgot-row { margin-bottom: 18px; }
+
+    .btn-submit { height: 44px; font-size: 14px; }
+
+    .signup-row { padding-top: 12px; }
+  }
+
+  /* Tablet: shrink side panel a bit */
+  @media (min-width: 641px) and (max-width: 820px) {
+    .card { width: 100%; height: auto; min-height: 500px; }
+    .left-panel { padding: 28px 28px 24px; }
+    .right-panel { width: 38%; padding: 28px 18px; }
+    .task-card { max-width: 200px; }
+    .form-title { font-size: 24px; }
   }
 `;
 
@@ -457,25 +458,19 @@ export default function Login() {
       const res = await fetch(`${API_BASE}/api/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: form.email,
-          password: form.password,
-        }),
+        body: JSON.stringify({ username: form.email, password: form.password }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setErrors((prev) => ({
-          ...prev,
-          password: data.message || "Login failed",
-        }));
+        setErrors((prev) => ({ ...prev, password: data.message || "Login failed" }));
         return;
       }
       localStorage.setItem("loggedInUser", JSON.stringify(data.admin));
       setSubmitted(true);
       setTimeout(() => navigate("/dashboard"), 800);
-    } catch (err) {
+    } catch {
       setErrors((prev) => ({
         ...prev,
         password: "Backend not reachable (check server running on 5000)",
@@ -485,68 +480,11 @@ export default function Login() {
     }
   };
 
-  const handleForgotPassword = async () => {
-    if (!form.email) {
-      setErrors((p) => ({ ...p, email: "Enter email first." }));
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: form.email }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setErrors((p) => ({ ...p, email: data.message || "Failed to send OTP" }));
-        return;
-      }
-
-      navigate("/forgot", { state: { email: form.email } });
-    } catch {
-      setErrors((p) => ({ ...p, email: "Backend not reachable" }));
-    }
-  };
-
   return (
     <>
       <style>{styles}</style>
       <div className="card">
-        {/* RIGHT PANEL — comes first in DOM so it appears on top on mobile */}
-        <div className="right-panel">
-          <div className="task-card">
-            <div className="check-float">
-              <svg viewBox="0 0 16 16" fill="none">
-                <path d="M3 8l3.5 3.5L13 5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            {TASKS.map((t, i) => (
-              <div className="task-item" key={i}>
-                {t.done ? (
-                  <div className="task-check">
-                    <svg viewBox="0 0 11 11" fill="none">
-                      <path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                ) : (
-                  <div className="task-check empty" />
-                )}
-                <span className="task-label">{t.label}</span>
-                <div className="task-bar">
-                  <div className="task-bar-fill" style={{ width: t.width }} />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="right-text">
-            <p>Manage your tasks in an <strong>easy and more efficient way</strong> with Priorify.</p>
-          </div>
-        </div>
-
-        {/* LEFT PANEL */}
+        {/* LEFT */}
         <div className="left-panel">
           <div className="logo-row">
             <div className="logo-icon">
@@ -576,10 +514,8 @@ export default function Login() {
               <div className="field">
                 <label>Email</label>
                 <input
-                  type="email"
-                  placeholder="Enter the email"
-                  value={form.email}
-                  onChange={handleChange("email")}
+                  type="email" placeholder="Enter the email"
+                  value={form.email} onChange={handleChange("email")}
                   className={errors.email ? "error" : ""}
                   autoComplete="off"
                 />
@@ -589,10 +525,8 @@ export default function Login() {
               <div className="field">
                 <label>Password</label>
                 <input
-                  type="password"
-                  placeholder="Enter the Password"
-                  value={form.password}
-                  onChange={handleChange("password")}
+                  type="password" placeholder="Enter the Password"
+                  value={form.password} onChange={handleChange("password")}
                   className={errors.password ? "error" : ""}
                   autoComplete="new-password"
                 />
@@ -603,7 +537,27 @@ export default function Login() {
                 <button
                   type="button"
                   className="forgot-btn"
-                  onClick={handleForgotPassword}
+                  onClick={async () => {
+                    if (!form.email) {
+                      setErrors((p) => ({ ...p, email: "Enter email first." }));
+                      return;
+                    }
+                    try {
+                      const res = await fetch(`${API_BASE}/api/admin/forgot-password`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username: form.email }),
+                      });
+                      const data = await res.json();
+                      if (!res.ok) {
+                        setErrors((p) => ({ ...p, email: data.message || "Failed to send OTP" }));
+                        return;
+                      }
+                      navigate("/forgot", { state: { email: form.email } });
+                    } catch {
+                      setErrors((p) => ({ ...p, email: "Backend not reachable" }));
+                    }
+                  }}
                 >
                   Forgot password?
                 </button>
@@ -618,6 +572,38 @@ export default function Login() {
               </div>
             </>
           )}
+        </div>
+
+        {/* RIGHT */}
+        <div className="right-panel">
+          <div className="task-card">
+            <div className="check-float">
+              <svg viewBox="0 0 16 16" fill="none">
+                <path d="M3 8l3.5 3.5L13 5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            {TASKS.map((t, i) => (
+              <div className="task-item" key={i}>
+                {t.done ? (
+                  <div className="task-check">
+                    <svg viewBox="0 0 11 11" fill="none">
+                      <path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                ) : (
+                  <div className="task-check empty" />
+                )}
+                <span className="task-label">{t.label}</span>
+                <div className="task-bar">
+                  <div className="task-bar-fill" style={{ width: t.width }} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="right-text">
+            <p>Manage your tasks in an <strong>easy and more efficient way</strong> with Priorify.</p>
+          </div>
         </div>
       </div>
     </>
