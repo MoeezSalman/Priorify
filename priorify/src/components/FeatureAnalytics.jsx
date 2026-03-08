@@ -129,7 +129,10 @@ export default function FeatureAnalytics() {
     return (first + last).toUpperCase();
   }
 
-  let name="JOE MAX";
+  const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
+  const name = storedUser
+  ? `${storedUser.firstName} ${storedUser.lastName}`
+  : "JOE MAX";
 
   const [activeState,setActiveState] = useState("priority")
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);

@@ -421,7 +421,10 @@ function Dashboard() {
     fetchStats();
     }, []);
 
-    let name="JOE MAX";
+    const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    const name = storedUser
+    ? `${storedUser.firstName} ${storedUser.lastName}`
+    : "JOE MAX";
     let today=new Date();
     
     const formattedDate = today.toLocaleDateString("en-GB", {
@@ -595,7 +598,7 @@ function Dashboard() {
                         <div style={nameLogo}>
                             {getInitials(name)}
                         </div>
-                        <h3 style={centerDivHeading}>Joe Max</h3>
+                        <h3 style={centerDivHeading}>{name}</h3>
                         <p style={centerDivtext}>Project Manager</p>
                     </div>
                 </div>    
