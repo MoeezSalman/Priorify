@@ -4,13 +4,20 @@ const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 exports.createAdmin = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { firstName, lastName, username, password } = req.body;
 
     if (!username || username.trim().length < 3) {
       return res.status(400).json({ message: "Username must be at least 3 chars." });
     }
     if (!password || password.length < 8) {
       return res.status(400).json({ message: "Password must be at least 8 chars." });
+    }
+    if (!firstName || !firstName.trim()) {
+      return res.status(400).json({ message: "First name is required." });
+    }
+
+    if (!lastName || !lastName.trim()) {
+      return res.status(400).json({ message: "Last name is required." });
     }
 
     const existing = await Admin.findOne({ username: username.trim() });
@@ -21,13 +28,20 @@ exports.createAdmin = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
 
     const admin = await Admin.create({
-      username: username.trim(),
-      passwordHash
+    firstName: firstName.trim(),
+    lastName: lastName.trim(),
+    username: username.trim(),
+    passwordHash
     });
 
-    return res.status(201).json({
-      message: "Admin created",
-      admin: { id: admin._id, username: admin.username }
+   return res.status(201).json({
+    message: "Admin created",
+    admin: {
+      id: admin._id,
+      firstName: admin.firstName,
+      lastName: admin.lastName,
+      username: admin.username
+    }
     });
   } catch (err) {
     console.error(err);
@@ -56,7 +70,12 @@ exports.loginAdmin = async (req, res) => {
     // For now, just return success (later you can add JWT token)
     return res.status(200).json({
       message: "Login successful",
-      admin: { id: admin._id, username: admin.username },
+      admin: {
+        id: admin._id,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        username: admin.username,
+      },
     });
   } catch (err) {
     console.error(err);

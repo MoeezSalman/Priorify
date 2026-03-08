@@ -161,7 +161,10 @@ export default function FeatureGraphs() {
       return (first + last).toUpperCase();
     }
   
-    let name="JOE MAX";
+    const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    const name = storedUser
+    ? `${storedUser.firstName} ${storedUser.lastName}`
+    : "JOE MAX";
     const navigate = useNavigate();
   
     const [activeState,setActiveState] = useState("graph")
