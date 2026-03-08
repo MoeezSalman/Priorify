@@ -1,611 +1,833 @@
-import React, { useState, useEffect } from "react";
-import logo from '../assets/logo.png'
-import chat from '../assets/chat_bubble.png'
-import totalFeedback from '../assets/totalFeedback.png'
-import unresolved from '../assets/unresolved.png'
-import emoji from '../assets/emoji.png'
-import {BarChart,Bar,XAxis,YAxis,Tooltip,ResponsiveContainer,CartesianGrid,Cell, LabelList  } from "recharts";
-import hamburger from '../assets/hamburger.png'
+import React, { useState, useEffect, useRef } from "react";
+import logo from "../assets/logo.png";
+import chat from "../assets/chat_bubble.png";
+import totalFeedback from "../assets/totalFeedback.png";
+import unresolved from "../assets/unresolved.png";
+import emoji from "../assets/emoji.png";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Cell,
+  LabelList,
+} from "recharts";
+import hamburger from "../assets/hamburger.png";
 import { useNavigate } from "react-router-dom";
 
-const MainSection = {
-    display:"flex",
-    width:"100vw"
-}
-
-const LeftSideBar = {
-    display:"flex",
-    flexDirection:"column",
-    height:"100vh",
-    width:"15vw",
-    backgroundColor:"#1a1f2e",
-    position:"fixed",
-    left:"0",
-    overflow:"hidden",
-}
-
-const UpperDivImg = {
-    paddingTop:"10px",
-    width:"255px",
-    height:"115px"
-}
-
-const MiddleDiv = {
-    paddingTop:"20px",
-    display:"flex",
-    flexDirection:"column"
-}
-
-const activeButton = {
-    backgroundColor:"#4C7CF3"
-}
-
-const MiddleDivButton = {
-    backgroundColor:"#1a1f2e"
-}
-
-const LeftSideInnerDiv1 = {
-    display:"flex",
-    flexDirection:"column",
-    gap:"10px"
-}
-
-const LeftSideInnerDiv2 = {
-    display:"flex",
-    flexDirection:"column",
-    gap:"10px",
-    marginTop:"auto"
-}
-
-const LowerDiv = {
-    display:"flex",
-    alignItems:"center",
-    marginTop:"15px",
-    marginLeft:"30px",
-    gap:"10px",
-    paddingBottom:"20px"
-}
-
-const LowerInnerDiv1 = {
-    width:"40px",
-    height:"40px",
-    borderRadius: "50%",
-    backgroundColor: "#4A90E2",
-    color: "white",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontWeight: "bold",
-    fontSize: "14px"
-}
-
-const hrLine = {
-    border: "none",
-    height: "1px",
-    backgroundColor: "rgba(255,255,255,0.2)",
-    width: "100%",
-}
-
-const CenterMainDiv = {
-    backgroundColor:"#f0f2f5",
-    minHeight:"100vh"
-}
-
-const NavBar = {
-    display:"flex",
-    alignItems:"center",
-    backgroundColor:"white",
-    height:"75px",
-    top:"0",
-    left:"0",
-    right:"0",
-    zIndex:"1000"
-}
-
-const NavBarItems = {
-    display:"flex",
-    marginLeft:"auto",
-    gap:"20px",
-    paddingRight:"30px"
-}
-
-const CalanderFormat = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "8px",
-    background: "#e6ebf5",
-    padding: "8px 14px",
-    borderRadius: "10px",
-    fontWeight: "500",
-    color: "#2f6df6"
-}
-
-const NavBarHeading1 = {
-    color:"black",
-    fontSize: "32px",
-    fontWeight: "500",
-}
-
-const syncButton = {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    background: "#4C7CF3",
-    color: "white",
-    padding: "10px 20px",
-    borderRadius: "14px",
-    border: "none",
-    fontSize: "16px",
-    fontWeight: "600",
-    cursor: "pointer",
-    boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
-    width: "110px",
-}
-
-const CenterMiddleDiv1 = {
-    display:"flex",
-    flexDirection:"Column",
-    gap:"15px",
-    paddingLeft:"20px",
-    paddingTop:"20px",
-    paddingBottom:"10px"
-}
-
-const CenterMiddleDivHeading = {
-    color:"black"
-}
-
-const CenterMiddleDivText = {
-    color:"grey",
-    width:"335px"
-}
-
-const CenterMainOuterDiv = {
-    display:"flex",
-    backgroundColor:"#f2f6ff",
-    alignItems:"center",
-    justifyContent:"space-between",
-}
-
-const CenterMiddleDivButton = {
-    width:"140px",
-    backgroundColor:"#4C7CF3",
-    color:"white",
-    textAlign:"center",
-}
-
-const CenterMiddleDiv2Img = {
-    width:"75px",
-    height:"45px",
-    paddingRight:"30px"
-}
-
-const MainCentralDiv = {
-    display:"flex",
-    padding:"20px",
-    gap:"40px"
-}
-
-const box1 = {
-    background: "#4C7CF3",
-    borderRadius:"15px",
-    display:"flex",
-    paddingTop:"10px",
-    paddingBottom:"10px",
-    paddingLeft:"25px",
-    paddingRight:"25px",
-    width:"100%",
-    justifyContent:"space-between",
-    height:"100px"
-}
-
-const box2 = {
-    background:"#2e9e6b",
-    borderRadius:"15px",
-    display:"flex",
-    paddingTop:"10px",
-    paddingBottom:"10px",
-    paddingLeft:"25px",
-    paddingRight:"25px",
-    width:"100%",
-    justifyContent:"space-between",
-    height:"100px"
-}
-
-const box3 = {
-    background:"black",
-    borderRadius:"15px",
-    display:"flex",
-    paddingTop:"10px",
-    paddingBottom:"10px",
-    paddingLeft:"25px",
-    paddingRight:"25px",
-    width:"100%",
-    justifyContent:"space-between",
-    height:"100px"
-}
-
-const innerbox1Img = {
-    width:"25px",
-    height:"25px",
-    marginTop:"10px"
-}
-
-const innerbox2Img = {
-    width:"25px",
-    height:"25px",
-    marginTop:"10px"
-}
-
-const innerbox3Img = {
-    width:"30px",
-    height:"30px",
-    marginTop:"10px"
-}
-
-const centerDiv = {
-    display:"flex",
-    gap:"15px",
-    paddingTop:"20px"
-}
-
-const graph1Box = {
-    background: "white",
-    borderRadius: "15px",
-    padding: "20px",
-    marginTop: "20px",
-    width: "100%",
-    height: "320px",
-}
-
-const graphHeader = {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "10px"
-}
-
-const graphHeading = {
-    color: "black"
-}
-
-const graphDropdown = {
-    padding: "6px 12px",
-    borderRadius: "8px",
-    border: "none",
-    background: "#e6ebf5",
-    color: "#2f6df6"
-}
-
-const graph2Box = {
-    background: "white",
-    borderRadius: "15px",
-    padding: "20px",
-    marginTop: "20px",
-    width: "100%",
-    height: "320px",
-}
-
-const graph2Header = {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "10px"
-}
-
-const graph2Heading = {
-    color: "black"
-}
-
-const graph2Dropdown = {
-    padding: "6px 12px",
-    borderRadius: "8px",
-    border: "none",
-    background: "#e6ebf5",
-    color: "#2f6df6"
-}
-
-const graphs = {
-    display:"flex",
-    justifyContent:"center",
-    gap:"20px",
-    width:"65vw"
-}
-
-const CenterRightDiv = {
-    display:"flex",
-    flexDirection:"column",
-    justifyContent:"center",
-    alignItems:"center",
-    background:"white",
-    width:"240px",
-    height:"230px",
-    gap:"10px",
-    borderRadius:"25px"
-}
-
-const centerDivtext = {
-    color:"grey",
-    marginTop:"-10px"
-}
-
-const centerDivHeading = {
-    color:"black"
-}
-
-const nameLogo = {
-        display:"flex",
-        flexDirection:"column",
-        justifyContent:"center",
-        alignItems:"center",
-        width:"65px",
-        height:"65px",
-        borderRadius: "50%",
-        backgroundColor: "#4A90E2",
-        color: "white",
-        fontWeight: "bold",
-        fontSize: "22px"
-}
-
-const hamburgerBtn = {
-    background: "transparent",
-    border: "none",
-    cursor: "pointer",
-    marginLeft: "15px",
-    width:"40px",
-    height:"40px"
-}
-
-const navLeft = {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px"
-}
-
 function Dashboard() {
+  const API_BASE = "http://localhost:5000";
 
-    const API_BASE = "http://localhost:5000";
-
-    const [stats, setStats] = useState({
+  const [stats, setStats] = useState({
     totalFeedback: 0,
     positiveSentiment: 0,
     unresolvedItems: 0,
-    });
-    const [activeState,setActiveState] = useState("dashboard")
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  });
 
-    const graphData = [
-        { name: "Bug", value: 230, color: "#3B82F6" },
-        { name: "UI", value: 190, color: "#2e9e6b" },
-        { name: "Speed", value: 160, color: "#3B82F6" },
-        { name: "Feature", value: 130, color: "#111827" },
-        { name: "Crash", value: 110, color: "#3B82F6" },
-        { name: "Login", value: 95, color: "#2e9e6b" },
-        { name: "Design", value: 80, color: "#111827" }
-    ];
+  const [activeState, setActiveState] = useState("dashboard");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-    const negativeData = [
-        { name: "slow", value: 89 },
-        { name: "crash", value: 74 },
-        { name: "conf.", value: 61 },
-        { name: "broken", value: 53 },
-        { name: "lag", value: 47 },
-        { name: "buggy", value: 38 },
-        { name: "miss.", value: 29 },
-        { name: "annoy.", value: 22 },
-    ];
+  const sidebarRef = useRef(null);
+  const hamburgerRef = useRef(null);
+  const [isMobileScreen, setIsMobileScreen] = useState(window.innerWidth < 786);
 
-    const getInitials = (name) => {
-        const words=name.trim().split(" ");
-        const first=words[0]?.[0] || "";
-        const last=words[1]?.[0] || "";
-        return (first + last).toUpperCase();
-    }
+  const graphData = [
+    { name: "Bug", value: 230, color: "#3B82F6" },
+    { name: "UI", value: 190, color: "#2e9e6b" },
+    { name: "Speed", value: 160, color: "#3B82F6" },
+    { name: "Feature", value: 130, color: "#111827" },
+    { name: "Crash", value: 110, color: "#3B82F6" },
+    { name: "Login", value: 95, color: "#2e9e6b" },
+    { name: "Design", value: 80, color: "#111827" },
+  ];
 
-    useEffect(() => {
+  const negativeData = [
+    { name: "slow", value: 89 },
+    { name: "crash", value: 74 },
+    { name: "conf.", value: 61 },
+    { name: "broken", value: 53 },
+    { name: "lag", value: 47 },
+    { name: "buggy", value: 38 },
+    { name: "miss.", value: 29 },
+    { name: "annoy.", value: 22 },
+  ];
+
+  const getInitials = (name) => {
+    const words = name.trim().split(" ");
+    const first = words[0]?.[0] || "";
+    const last = words[1]?.[0] || "";
+    return (first + last).toUpperCase();
+  };
+
+  useEffect(() => {
     const fetchStats = async () => {
-        try {
+      try {
         const res = await fetch(`${API_BASE}/api/feedback/stats`);
         const data = await res.json();
 
         if (!res.ok) {
-            console.error(data.message || "Failed to fetch feedback stats");
-            return;
+          console.error(data.message || "Failed to fetch feedback stats");
+          return;
         }
 
         setStats(data);
-        } catch (err) {
+      } catch (err) {
         console.error("Error fetching feedback stats:", err);
-        }
+      }
     };
-    fetchStats();
-    }, []);
 
-    const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
-    const name = storedUser
+    fetchStats();
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 786;
+      setIsMobileScreen(mobile);
+
+      if (!mobile) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!isMobileScreen || !isSidebarOpen) return;
+
+      const clickedInsideSidebar =
+        sidebarRef.current && sidebarRef.current.contains(event.target);
+
+      const clickedHamburger =
+        hamburgerRef.current && hamburgerRef.current.contains(event.target);
+
+      if (!clickedInsideSidebar && !clickedHamburger) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isMobileScreen, isSidebarOpen]);
+
+  const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
+  const name = storedUser
     ? `${storedUser.firstName} ${storedUser.lastName}`
     : "JOE MAX";
-    let today=new Date();
-    
-    const formattedDate = today.toLocaleDateString("en-GB", {
-        day:"numeric",
-        month:"long",
-        year:"numeric"
-    });
 
-    const navigate = useNavigate();
+  const today = new Date();
 
-    return (
-        
-        <div style={MainSection}>
-            {isSidebarOpen && (
-                    <div style={LeftSideBar}>
+  const formattedDate = today.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
-                        <div style={LeftSideInnerDiv1}>
-                            <img style={UpperDivImg} src={logo} alt="logo" />
-                            
-                            <hr style={hrLine} />
+  const navigate = useNavigate();
 
-                            <div style={MiddleDiv}>
-                                <button style={activeState === "dashboard" ? activeButton : MiddleDivButton} 
-                                onClick={() => { setActiveState("dashboard")
-                                    navigate("/dashboard");}}>Dashboard</button>
-                                <button style={activeState === "priorify" ? activeButton : MiddleDivButton}
-                                onClick={() => { setActiveState("priorify") 
-                                    navigate("/priority");}}>Priority</button>
-                                <button style={activeState === "graph" ? activeButton : MiddleDivButton}
-                                onClick={() => { setActiveState("graph"); 
-                                    navigate("/graph")}}>Graph</button>
-                            </div>
-                        </div>
+  return (
+    <>
+      <style>{`
+        * {
+          box-sizing: border-box;
+        }
 
-                        <div style={LeftSideInnerDiv2}>
-                            <hr style={hrLine} />
+        .main-section {
+          display: flex;
+          width: 100vw;
+        }
 
-                            <div style={LowerDiv}>
-                                <div style={LowerInnerDiv1}>
-                                    {getInitials(name)}
-                                </div>
+        .left-sidebar {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 240px;
+            background-color: #1a1f2e;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow: hidden;
+            z-index: 2000;
+        }
 
-                                <div className="LowerInnerDiv2">
-                                    <h4 id="LowerInnerHeading1">{name}</h4>
-                                    <p id="LowerInnerText">Project Manager</p>
-                                </div>
+        .upper-div-img {
+          padding-top: 10px;
+          max-width: 255px;
+          max-height: 115px;
+        }
 
-                            </div>
-                        </div>
+        .middle-div {
+          padding-top: 20px;
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+        }
 
-                    </div>
-            )}
-            
+        .sidebar-btn {
+          border: none;
+          color: white;
+          padding: 14px 16px;
+          cursor: pointer;
+          width: 100%;
+        }
 
-            <div style={{...CenterMainDiv, width: isSidebarOpen ? "85vw" : "100vw",
-            marginLeft: isSidebarOpen ? "15vw" : "0"}}>
-                <div style={NavBar}>
-                    <div style={navLeft}>
-                        <img style={hamburgerBtn} src={hamburger} 
-                        onClick={() => setIsSidebarOpen(!isSidebarOpen)} alt="button" />
-                        <h2 style={NavBarHeading1}>Feedback Dashboard</h2>
-                    </div>
+        .active-button {
+          background-color: #4C7CF3;
+        }
 
-                    <div style={NavBarItems}>
-                        <div style={CalanderFormat}>
-                            📅 {formattedDate}
-                        </div>
-                        <button style={syncButton}>🔄 Sync</button>
-                    </div>
+        .middle-div-button {
+          background-color: #1a1f2e;
+        }
+
+        .left-sidebar-inner-1 {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .left-sidebar-inner-2 {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          margin-top: auto;
+          width: 100%;
+        }
+
+        .lower-div {
+          display: flex;
+          align-items: center;
+          margin-top: 15px;
+          margin-left: 30px;
+          gap: 10px;
+          padding-bottom: 20px;
+          color: white;
+        }
+
+        .lower-inner-div-1 {
+          max-width: 40px;
+          max-height: 40px;
+          min-width: 40px;
+          min-height: 40px;
+          border-radius: 50%;
+          background-color: #4A90E2;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          font-size: 14px;
+        }
+
+        .lower-inner-div-2-heading,
+        .lower-inner-div-2-text {
+          margin: 0;
+          max-width: 100%;
+          max-height: 100%;
+        }
+
+        .hr-line {
+          border: none;
+          height: 1px;
+          background-color: rgba(255,255,255,0.2);
+          width: 100%;
+        }
+
+        .center-main-div {
+          background-color: #f0f2f5;
+          min-height: 100vh;
+          width: 100%;
+          margin-left: 0;
+        }
+
+        .center-main-div.sidebar-open {
+            width: calc(100% - 240px);
+            margin-left: 240px;
+        }
+
+        .nav-bar {
+          display: flex;
+          align-items: center;
+          background-color: white;
+          min-height: 75px;
+          padding: 0 20px;
+        }
+
+        .nav-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .hamburger-btn {
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          margin-left: 15px;
+          width: 40px;
+          height: 40px;
+        }
+
+        .nav-bar-heading {
+          color: black;
+          font-size: 32px;
+          font-weight: 500;
+          margin: 0;
+        }
+
+        .nav-bar-items {
+          display: flex;
+          margin-left: auto;
+          gap: 20px;
+          padding-right: 10px;
+          align-items: center;
+        }
+
+        .calendar-format {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: #e6ebf5;
+          padding: 8px 14px;
+          border-radius: 10px;
+          font-weight: 500;
+          color: #2f6df6;
+        }
+
+        .sync-button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          background: #4C7CF3;
+          color: white;
+          padding: 10px 20px;
+          border-radius: 14px;
+          border: none;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+          width: 110px;
+        }
+
+        .main-central-div {
+          display: flex;
+          padding: 20px;
+          gap: 40px;
+        }
+
+        .dashboard-left-content {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .center-main-outer-div {
+          display: flex;
+          background-color: #f2f6ff;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          border-radius: 12px;
+        }
+
+        .center-middle-div-1 {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+          padding-left: 20px;
+          padding-top: 20px;
+          padding-bottom: 10px;
+        }
+
+        .center-middle-div-heading {
+          color: black;
+          margin: 0;
+        }
+
+        .center-middle-div-text {
+          color: grey;
+          width: 335px;
+          max-width: 100%;
+          margin: 0;
+        }
+
+        .center-middle-div-button {
+          width: 140px;
+          background-color: #4C7CF3;
+          color: white;
+          text-align: center;
+          border: none;
+          padding: 10px 14px;
+          border-radius: 10px;
+          cursor: pointer;
+        }
+
+        .center-middle-div-2-img {
+          width: 75px;
+          height: 45px;
+          padding-right: 30px;
+        }
+
+        .center-div {
+          display: flex;
+          gap: 15px;
+          padding-top: 20px;
+          width: 100%;
+        }
+
+        .box {
+          border-radius: 15px;
+          display: flex;
+          padding: 10px 25px;
+          width: 100%;
+          justify-content: space-between;
+          height: 100px;
+          color: white;
+        }
+
+        .box1 {
+          background: #4C7CF3;
+        }
+
+        .box2 {
+          background: #2e9e6b;
+        }
+
+        .box3 {
+          background: black;
+        }
+
+        .innerbox1-img,
+        .innerbox2-img {
+          width: 25px;
+          height: 25px;
+          margin-top: 10px;
+        }
+
+        .innerbox3-img {
+          width: 30px;
+          height: 30px;
+          margin-top: 10px;
+        }
+
+        .graphs {
+          display: flex;
+          justify-content: center;
+          gap: 20px;
+          width: 100%;
+        }
+
+        .graph-box {
+          background: white;
+          border-radius: 15px;
+          padding: 20px;
+          margin-top: 20px;
+          width: 100%;
+          height: 320px;
+        }
+
+        .graph-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 10px;
+        }
+
+        .graph-heading {
+          color: black;
+          margin: 0;
+        }
+
+        .graph-dropdown {
+          padding: 6px 12px;
+          border-radius: 8px;
+          border: none;
+          background: #e6ebf5;
+          color: #2f6df6;
+        }
+
+        .center-right-div {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          background: white;
+          width: 240px;
+          min-width: 240px;
+          height: 230px;
+          gap: 10px;
+          border-radius: 25px;
+        }
+
+        .name-logo {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          width: 65px;
+          height: 65px;
+          border-radius: 50%;
+          background-color: #4A90E2;
+          color: white;
+          font-weight: bold;
+          font-size: 22px;
+        }
+
+        .center-div-heading {
+          color: black;
+          text-align: center;
+          margin: 0;
+        }
+
+        .center-div-text {
+          color: grey;
+          margin-top: -10px;
+          text-align: center;
+        }
+
+        @media (max-width: 1024px) {
+          .nav-bar-heading {
+            font-size: 24px;
+          }
+
+          .main-central-div {
+            flex-direction: column;
+          }
+
+          .center-right-div {
+            width: 100%;
+            min-width: 100%;
+            height: auto;
+            padding: 20px;
+          }
+
+          .center-div {
+            flex-direction: column;
+          }
+
+          .graphs {
+            flex-direction: column;
+          }
+
+          .center-main-div.sidebar-open {
+            width: calc(100% - 220px);
+            margin-left: 220px;
+          }
+
+          .left-sidebar {
+            width: 220px;
+          }
+        }
+
+        @media (max-width: 786px) {
+          .nav-bar {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 15px;
+          }
+
+          .nav-bar-items {
+            width: 100%;
+            justify-content: space-between;
+            padding-right: 0;
+            margin-left: 0;
+            flex-wrap: wrap;
+          }
+
+          .nav-bar-heading {
+            font-size: 20px;
+          }
+
+          .center-main-div,
+          .center-main-div.sidebar-open {
+            width: 100%;
+            margin-left: 0;
+          }
+
+          .left-sidebar {
+            width: 30vw;
+            min-width: unset;
+          }
+
+          .center-main-outer-div {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+            padding-bottom: 20px;
+          }
+
+          .center-middle-div-text {
+            width: 100%;
+          }
+
+          .center-middle-div-2-img {
+            padding-left: 20px;
+            padding-right: 0;
+          }
+
+          .main-central-div {
+            padding: 15px;
+            gap: 20px;
+          }
+
+          .center-div {
+            flex-direction: column;
+          }
+
+          .graphs {
+            flex-direction: column;
+          }
+
+          .graph-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+          }
+
+          .graph-box {
+            height: 300px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .nav-bar-heading {
+            font-size: 18px;
+          }
+
+          .calendar-format,
+          .sync-button {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .left-sidebar {
+            width: 50%;
+          }
+
+          .center-middle-div-1 {
+            padding-left: 15px;
+            padding-right: 15px;
+          }
+
+          .box {
+            padding-left: 15px;
+            padding-right: 15px;
+          }
+        }
+      `}</style>
+
+      <div className="main-section">
+        {isSidebarOpen && (
+          <div className="left-sidebar" ref={sidebarRef}>
+            <div className="left-sidebar-inner-1">
+              <img className="upper-div-img" src={logo} alt="logo" />
+
+              <hr className="hr-line" />
+
+              <div className="middle-div">
+                <button
+                  className={
+                    activeState === "dashboard"
+                      ? "sidebar-btn active-button"
+                      : "sidebar-btn middle-div-button"
+                  }
+                  onClick={() => {
+                    setActiveState("dashboard");
+                    navigate("/dashboard");
+                  }}
+                >
+                  Dashboard
+                </button>
+
+                <button
+                  className={
+                    activeState === "priorify"
+                      ? "sidebar-btn active-button"
+                      : "sidebar-btn middle-div-button"
+                  }
+                  onClick={() => {
+                    setActiveState("priorify");
+                    navigate("/priority");
+                  }}
+                >
+                  Priority
+                </button>
+
+                <button
+                  className={
+                    activeState === "graph"
+                      ? "sidebar-btn active-button"
+                      : "sidebar-btn middle-div-button"
+                  }
+                  onClick={() => {
+                    setActiveState("graph");
+                    navigate("/graph");
+                  }}
+                >
+                  Graph
+                </button>
+              </div>
+            </div>
+
+            <div className="left-sidebar-inner-2">
+              <hr className="hr-line" />
+
+              <div className="lower-div">
+                <div className="lower-inner-div-1">{getInitials(name)}</div>
+
+                <div className="lower-inner-div-2">
+                  <h4 className="lower-inner-div-2-heading">{name}</h4>
+                  <p className="lower-inner-div-2-text">Project Manager</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className={`center-main-div ${isSidebarOpen ? "sidebar-open" : ""}`}>
+          <div className="nav-bar">
+            <div className="nav-left">
+              <img
+                ref={hamburgerRef}
+                className="hamburger-btn"
+                src={hamburger}
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                alt="button"
+              />
+              <h2 className="nav-bar-heading">Feedback Dashboard</h2>
+            </div>
+
+            <div className="nav-bar-items">
+              <div className="calendar-format">📅 {formattedDate}</div>
+              <button className="sync-button">🔄 Sync</button>
+            </div>
+          </div>
+
+          <div className="main-central-div">
+            <div className="dashboard-left-content">
+              <div className="center-main-outer-div">
+                <div className="center-middle-div-1">
+                  <h3 className="center-middle-div-heading">
+                    Your Feedback Analytics Area
+                  </h3>
+                  <p className="center-middle-div-text">
+                    Monitor feedback trends, track sentiment, and manage
+                    priorities to improve your product and customer experience.
+                  </p>
+                  <button className="center-middle-div-button">Learn More</button>
                 </div>
 
-                <div style={MainCentralDiv}>
-                    <div>
-                        <div style={{...CenterMainOuterDiv,width: isSidebarOpen ? "65vw" : "80vw"}}>
-                            <div style={CenterMiddleDiv1}> 
-                                <h3 style={CenterMiddleDivHeading}>Your Feedback Analytics Area</h3>
-                                <p style={CenterMiddleDivText}>Monitor feedback trends, track sentiment, and manage priorities to improve your product and customer experience.</p>
-                                <button style={CenterMiddleDivButton}>Learn More</button>
-                            </div>
-                        
-                            <img style={CenterMiddleDiv2Img} src={chat} alt="logo" />
-                        </div>
+                <img className="center-middle-div-2-img" src={chat} alt="logo" />
+              </div>
 
-                        <div style={{...centerDiv, width : isSidebarOpen ? "1105px" : "1360px"}}>
-                            <div style={box1}>
-                                <div className="innerbox1">
-                                    <h2 id="innerbox1Heading">{stats.totalFeedback}</h2>
-                                    <p id="innerbox1Text">Total Feedback Received</p>
-                                </div>
-                                <img style={innerbox1Img} src={totalFeedback} alt="" />
-                            </div>
-                            
-                            <div style={box2}>
-                                <div className="innerbox2">
-                                    <h2 id="innerbox2Heading">{stats.positiveSentiment}%</h2>
-                                    <p id="innerbox2Text">Positive Sentiment</p>
-                                </div>
-                                <img style={innerbox2Img} src={emoji} alt="" />
-                            </div>
-                            
-                            <div style={box3}>
-                                <div className="innerbox3">
-                                    <h2 id="innerbox3Heading">{stats.unresolvedItems}</h2>
-                                    <p id="innerbox3Text">Unresolved Items</p>
-                                </div>
-                                <img style={innerbox3Img} src={unresolved} alt="" />
-                            </div>
-                        </div>
+              <div className="center-div">
+                <div className="box box1">
+                  <div className="innerbox">
+                    <h2>{stats.totalFeedback}</h2>
+                    <p>Total Feedback Received</p>
+                  </div>
+                  <img className="innerbox1-img" src={totalFeedback} alt="" />
+                </div>
 
-                        <div style={{...graphs,  width : isSidebarOpen ? "1105px" : "1360px"}}>
-                            <div className="Graph1" style={graph1Box}>
-                                <div style={graphHeader}>
-                                    <h3 style={graphHeading}>Top Feedback Keywords</h3>
-                                    <select style={graphDropdown}>
-                                        <option>Weekly</option>
-                                        <option>Monthly</option>
-                                    </select>
-                                </div>
+                <div className="box box2">
+                  <div className="innerbox">
+                    <h2>{stats.positiveSentiment}%</h2>
+                    <p>Positive Sentiment</p>
+                  </div>
+                  <img className="innerbox2-img" src={emoji} alt="" />
+                </div>
 
-                                <ResponsiveContainer width="100%" height="85%">
-                                <BarChart data={graphData}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
+                <div className="box box3">
+                  <div className="innerbox">
+                    <h2>{stats.unresolvedItems}</h2>
+                    <p>Unresolved Items</p>
+                  </div>
+                  <img className="innerbox3-img" src={unresolved} alt="" />
+                </div>
+              </div>
 
-                            <Bar dataKey="value" radius={[8,8,0,0]}>
-                                {graphData.map((entry, index) => (
-                                <Cell key={index} fill={entry.color} />
-                                ))}
-                            </Bar>
+              <div className="graphs">
+                <div className="graph-box">
+                  <div className="graph-header">
+                    <h3 className="graph-heading">Top Feedback Keywords</h3>
+                    <select className="graph-dropdown">
+                      <option>Weekly</option>
+                      <option>Monthly</option>
+                    </select>
+                  </div>
 
-                            </BarChart>
-                            </ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height="85%">
+                    <BarChart data={graphData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
 
-                        </div>
+                      <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                        {graphData.map((entry, index) => (
+                          <Cell key={index} fill={entry.color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
 
-                            <div className="Graph2" style={graph2Box}>
-                                <div style={graph2Header}>
-                                    <h3 style={graph2Heading}>Negative Feedback Keywords</h3>
+                <div className="graph-box">
+                  <div className="graph-header">
+                    <h3 className="graph-heading">Negative Feedback Keywords</h3>
 
-                                    <select style={graph2Dropdown}>
-                                        <option>Top 8</option>
-                                        <option>Top 5</option>
-                                        <option>Top 10</option>
-                                    </select>
-                                </div>
+                    <select className="graph-dropdown">
+                      <option>Top 8</option>
+                      <option>Top 5</option>
+                      <option>Top 10</option>
+                    </select>
+                  </div>
 
-                                <ResponsiveContainer width="100%" height="85%">
-                                <BarChart data={negativeData} barCategoryGap={18}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="name" />
-                                <YAxis />
-                                <Tooltip />
+                  <ResponsiveContainer width="100%" height="85%">
+                    <BarChart data={negativeData} barCategoryGap={18}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
 
-                                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                                    {negativeData.map((_, index) => (
-                                    <Cell key={index} fill="#EF4444" />
-                                    ))}
-
-                                    <LabelList dataKey="value" position="top" fill="#EF4444" fontSize={12} />
-                                </Bar>
-                                </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </div>    
-
-                    </div>                    
-                    
-                    <div style={CenterRightDiv}>
-                        <div style={nameLogo}>
-                            {getInitials(name)}
-                        </div>
-                        <h3 style={centerDivHeading}>{name}</h3>
-                        <p style={centerDivtext}>Project Manager</p>
-                    </div>
-                </div>    
+                      <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                        {negativeData.map((_, index) => (
+                          <Cell key={index} fill="#EF4444" />
+                        ))}
+                        <LabelList
+                          dataKey="value"
+                          position="top"
+                          fill="#EF4444"
+                          fontSize={12}
+                        />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             </div>
-        </div>
 
-    );
+            <div className="center-right-div">
+              <div className="name-logo">{getInitials(name)}</div>
+              <h3 className="center-div-heading">{name}</h3>
+              <p className="center-div-text">Project Manager</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }
 
 export default Dashboard;
