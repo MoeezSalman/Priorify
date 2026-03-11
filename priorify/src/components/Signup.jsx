@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
@@ -420,6 +420,33 @@ const styles = `
 
   .success-sub { font-size: 13px; color: #9a97b0; }
 
+  /* Role badge */
+  .role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0eeff;
+    border: 1.5px solid #d4ccff;
+    border-radius: 99px;
+    padding: 4px 12px 4px 8px;
+    margin-bottom: 14px;
+    width: fit-content;
+  }
+
+  .role-badge-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #6c5ce7;
+    flex-shrink: 0;
+  }
+
+  .role-badge-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6c5ce7;
+    font-family: 'DM Sans', sans-serif;
+  }
+
   /* ── MOBILE RESPONSIVE ── */
   @media (max-width: 640px) {
     body { padding: 0; align-items: stretch; }
@@ -519,6 +546,19 @@ const API_BASE = "http://localhost:5000";
 
 export default function TaskySignup() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const roleState = location.state || {};
+
+  const roleLabel = roleState.role === "pm"
+    ? "Project Manager"
+    : roleState.subrole === "developer"
+    ? "Developer"
+    : roleState.subrole === "maintenance_engineer"
+    ? "Maintenance Engineer"
+    : roleState.subrole === "requirement_engineer"
+    ? "Requirement Engineer"
+    : null;
+
   const [form, setForm] = useState({
     firstName: "", lastName: "", email: "", password: "", confirmPassword: "", agreed: false,
   });
@@ -557,6 +597,8 @@ export default function TaskySignup() {
           lastName: form.lastName,
           username: form.email,
           password: form.password,
+          role: roleState.role || null,
+          subrole: roleState.subrole || null,
         }),
       });
 
@@ -600,9 +642,9 @@ export default function TaskySignup() {
           <div className="left-center">
             <div className="profile-card">
               <div className="profile-header">
-                <div className="avatar">🧑</div>
+                <div className="avatar">HA</div>
                 <div>
-                  <div className="profile-name">Mirha Fatima</div>
+                  <div className="profile-name">Haris Ali</div>
                   <div className="profile-role">Project Manager</div>
                 </div>
                 <div className="check-badge">
@@ -652,6 +694,13 @@ export default function TaskySignup() {
             <>
               <div className="form-title">Create Account</div>
               <div className="form-sub">Fill in the details below to get started</div>
+
+              {roleLabel && (
+                <div className="role-badge">
+                  <div className="role-badge-dot" />
+                  <span className="role-badge-text">{roleLabel}</span>
+                </div>
+              )}
 
               <div className="row-2">
                 <div className="field">
