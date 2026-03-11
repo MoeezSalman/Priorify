@@ -568,7 +568,7 @@ export default function Login() {
               </button>
 
               <div className="signup-row">
-                Don't have an account? <a href="./Signup">Sign Up</a>
+                Don't have an account? <a href="./Homepage">Sign Up</a>
               </div>
             </>
           )}
