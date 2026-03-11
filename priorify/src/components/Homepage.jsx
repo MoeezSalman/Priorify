@@ -6,6 +6,8 @@ const styles = `
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
+  html { font-size: 16px; }
+
   body {
     font-family: 'DM Sans', sans-serif;
     background: #0d0d1a;
@@ -23,8 +25,8 @@ const styles = `
   .page::before {
     content: '';
     position: fixed;
-    top: -120px; left: -120px;
-    width: 500px; height: 500px;
+    top: -7.5rem; left: -7.5rem;
+    width: 31.25rem; height: 31.25rem;
     border-radius: 50%;
     background: radial-gradient(circle, rgba(108,92,231,0.18) 0%, transparent 70%);
     pointer-events: none;
@@ -34,8 +36,8 @@ const styles = `
   .page::after {
     content: '';
     position: fixed;
-    bottom: -100px; right: 40%;
-    width: 400px; height: 400px;
+    bottom: -6.25rem; right: 40%;
+    width: 25rem; height: 25rem;
     border-radius: 50%;
     background: radial-gradient(circle, rgba(139,124,248,0.12) 0%, transparent 70%);
     pointer-events: none;
@@ -45,10 +47,11 @@ const styles = `
   /* ── LEFT PANEL ── */
   .left {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 36px 52px;
+    padding: 2.25rem 3.25rem;
     position: relative;
     z-index: 1;
     border-right: 1px solid rgba(255,255,255,0.05);
@@ -57,25 +60,26 @@ const styles = `
   .logo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 0.75rem;
   }
 
   .logo-icon {
-    width: 42px; height: 42px;
+    width: 2.625rem; height: 2.625rem;
     background: #6c5ce7;
-    border-radius: 12px;
+    border-radius: 0.75rem;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 18px rgba(108,92,231,0.4);
+    box-shadow: 0 0.25rem 1.125rem rgba(108,92,231,0.4);
+    flex-shrink: 0;
   }
 
-  .logo-icon svg { width: 22px; height: 22px; }
+  .logo-icon svg { width: 1.375rem; height: 1.375rem; }
 
   .logo-name {
     font-family: 'Sora', sans-serif;
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #fff;
-    letter-spacing: -0.3px;
+    letter-spacing: -0.02em;
   }
 
   .hero {
@@ -83,26 +87,27 @@ const styles = `
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 40px 0 20px;
+    padding: 2.5rem 0 1.25rem;
   }
 
   .badge {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.5rem;
     background: rgba(108,92,231,0.12);
     border: 1px solid rgba(108,92,231,0.3);
     border-radius: 99px;
-    padding: 5px 14px 5px 10px;
-    margin-bottom: 28px;
+    padding: 0.3125rem 0.875rem 0.3125rem 0.625rem;
+    margin-bottom: 1.75rem;
     width: fit-content;
   }
 
   .badge-dot {
-    width: 6px; height: 6px;
+    width: 0.375rem; height: 0.375rem;
     border-radius: 50%;
     background: #6c5ce7;
     animation: pulse 2s infinite;
+    flex-shrink: 0;
   }
 
   @keyframes pulse {
@@ -111,54 +116,54 @@ const styles = `
   }
 
   .badge-text {
-    font-size: 10.5px;
+    font-size: 0.65625rem;
     font-weight: 600;
-    letter-spacing: 1.2px;
+    letter-spacing: 0.075em;
     text-transform: uppercase;
     color: rgba(255,255,255,0.6);
   }
 
   .hero-title {
     font-family: 'Sora', sans-serif;
-    font-size: clamp(36px, 5vw, 54px);
+    font-size: clamp(2rem, 4vw, 3.375rem);
     font-weight: 800;
     line-height: 1.1;
-    letter-spacing: -1.5px;
+    letter-spacing: -0.04em;
     color: #fff;
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
   }
 
   .hero-title .accent { color: #8b7cf8; }
 
   .hero-desc {
-    font-size: 15px;
+    font-size: 0.9375rem;
     color: rgba(255,255,255,0.45);
     line-height: 1.7;
-    max-width: 380px;
-    margin-bottom: 40px;
+    max-width: 23.75rem;
+    margin-bottom: 2.5rem;
   }
 
   .trust-badges {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 1.5rem;
     flex-wrap: wrap;
   }
 
   .trust-item {
     display: flex;
     align-items: center;
-    gap: 7px;
-    font-size: 12.5px;
+    gap: 0.4375rem;
+    font-size: 0.78125rem;
     color: rgba(255,255,255,0.35);
   }
 
-  .trust-item svg { width: 15px; height: 15px; opacity: 0.5; }
+  .trust-item svg { width: 0.9375rem; height: 0.9375rem; opacity: 0.5; flex-shrink: 0; }
 
-  .footer-links { display: flex; gap: 24px; }
+  .footer-links { display: flex; gap: 1.5rem; }
 
   .footer-links a {
-    font-size: 12.5px;
+    font-size: 0.78125rem;
     color: rgba(255,255,255,0.25);
     text-decoration: none;
     transition: color 0.2s;
@@ -168,47 +173,47 @@ const styles = `
 
   /* ── RIGHT PANEL ── */
   .right {
-    width: 480px;
+    width: clamp(320px, 35%, 520px);
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 52px;
+    padding: 3.25rem;
     position: relative;
     z-index: 1;
   }
 
   .right-title {
     font-family: 'Sora', sans-serif;
-    font-size: 26px;
+    font-size: 1.625rem;
     font-weight: 700;
     color: #fff;
-    letter-spacing: -0.4px;
-    margin-bottom: 6px;
+    letter-spacing: -0.025em;
+    margin-bottom: 0.375rem;
   }
 
   .right-sub {
-    font-size: 13.5px;
+    font-size: 0.84375rem;
     color: rgba(255,255,255,0.4);
-    margin-bottom: 32px;
+    margin-bottom: 2rem;
     line-height: 1.5;
   }
 
   .role-cards {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin-bottom: 28px;
+    gap: 0.875rem;
+    margin-bottom: 1.75rem;
   }
 
   .role-card {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 1rem;
     background: rgba(255,255,255,0.04);
     border: 1.5px solid rgba(255,255,255,0.08);
-    border-radius: 16px;
-    padding: 18px 20px;
+    border-radius: 1rem;
+    padding: 1.125rem 1.25rem;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s, transform 0.15s;
     user-select: none;
@@ -226,30 +231,30 @@ const styles = `
   }
 
   .role-icon {
-    width: 48px; height: 48px;
-    border-radius: 12px;
+    width: 3rem; height: 3rem;
+    border-radius: 0.75rem;
     display: flex; align-items: center; justify-content: center;
-    font-size: 22px;
+    font-size: 1.375rem;
     flex-shrink: 0;
   }
 
   .role-icon.pm { background: linear-gradient(135deg, #e05c7a, #f06292); }
   .role-icon.tm { background: linear-gradient(135deg, #26c6da, #00acc1); }
 
-  .role-info { flex: 1; }
+  .role-info { flex: 1; min-width: 0; }
 
   .role-name {
     font-family: 'Sora', sans-serif;
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 600;
     color: #fff;
-    margin-bottom: 4px;
+    margin-bottom: 0.25rem;
   }
 
-  .role-desc { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; }
+  .role-desc { font-size: 0.75rem; color: rgba(255,255,255,0.4); line-height: 1.5; }
 
   .role-check {
-    width: 24px; height: 24px;
+    width: 1.5rem; height: 1.5rem;
     border-radius: 50%;
     background: #6c5ce7;
     display: flex; align-items: center; justify-content: center;
@@ -260,32 +265,32 @@ const styles = `
   }
 
   .role-card.selected .role-check { opacity: 1; transform: scale(1); }
-  .role-check svg { width: 13px; height: 13px; }
+  .role-check svg { width: 0.8125rem; height: 0.8125rem; }
 
   .btn-continue {
     width: 100%;
-    height: 52px;
+    height: 3.25rem;
     border: none;
-    border-radius: 14px;
+    border-radius: 0.875rem;
     background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
     color: #fff;
     font-family: 'Sora', sans-serif;
-    font-size: 15.5px;
+    font-size: 0.96875rem;
     font-weight: 600;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    gap: 10px;
+    gap: 0.625rem;
     transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
-    box-shadow: 0 6px 24px rgba(108,92,231,0.4);
-    margin-bottom: 18px;
+    box-shadow: 0 0.375rem 1.5rem rgba(108,92,231,0.4);
+    margin-bottom: 1.125rem;
   }
 
-  .btn-continue:hover { transform: translateY(-1px); box-shadow: 0 10px 32px rgba(108,92,231,0.55); }
+  .btn-continue:hover { transform: translateY(-1px); box-shadow: 0 0.625rem 2rem rgba(108,92,231,0.55); }
   .btn-continue:active { transform: translateY(0); }
   .btn-continue:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
-  .btn-continue svg { width: 18px; height: 18px; }
+  .btn-continue svg { width: 1.125rem; height: 1.125rem; }
 
-  .signin-text { text-align: center; font-size: 13px; color: rgba(255,255,255,0.35); }
+  .signin-text { text-align: center; font-size: 0.8125rem; color: rgba(255,255,255,0.35); }
   .signin-text a { color: #8b7cf8; font-weight: 600; text-decoration: none; }
   .signin-text a:hover { text-decoration: underline; }
 
@@ -299,7 +304,7 @@ const styles = `
     align-items: center;
     justify-content: center;
     z-index: 100;
-    padding: 20px;
+    padding: 1.25rem;
     animation: fadeIn 0.2s ease;
   }
 
@@ -310,78 +315,80 @@ const styles = `
 
   .modal {
     background: #fff;
-    border-radius: 24px;
-    padding: 40px 36px 36px;
+    border-radius: 1.5rem;
+    padding: 2.5rem 2.25rem 2.25rem;
     width: 100%;
-    max-width: 500px;
+    max-width: min(31.25rem, 90vw);
     position: relative;
     animation: slideUp 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
     color: #1a1438;
   }
 
   @keyframes slideUp {
-    from { opacity: 0; transform: translateY(28px) scale(0.96); }
+    from { opacity: 0; transform: translateY(1.75rem) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
- .modal-close {
-  position: absolute;
-  top: 16px; right: 16px;
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  border: none;
-  background: #1a1438;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  color: #fff;
-  transition: background 0.2s, transform 0.15s;
-}
+  .modal-close {
+    position: absolute;
+    top: 1rem; right: 1rem;
+    width: 2.125rem; height: 2.125rem;
+    border-radius: 50%;
+    border: none;
+    background: #1a1438;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    transition: background 0.2s, transform 0.15s;
+    font-size: 0;
+  }
 
   .modal-close:hover { background: #6c5ce7; transform: scale(1.08); }
-  .modal-close svg { width: 15px; height: 15px; }
+  .modal-close svg { width: 0.9375rem; height: 0.9375rem; }
 
   .modal-logo {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    margin-bottom: 22px;
+    gap: 0.625rem;
+    margin-bottom: 1.375rem;
   }
 
   .modal-logo-icon {
-    width: 38px; height: 38px;
+    width: 2.375rem; height: 2.375rem;
     background: #6c5ce7;
-    border-radius: 10px;
+    border-radius: 0.625rem;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 14px rgba(108,92,231,0.35);
+    box-shadow: 0 0.25rem 0.875rem rgba(108,92,231,0.35);
+    flex-shrink: 0;
   }
 
-  .modal-logo-icon svg { width: 20px; height: 20px; }
+  .modal-logo-icon svg { width: 1.25rem; height: 1.25rem; }
 
   .modal-logo-name {
     font-family: 'Sora', sans-serif;
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 700;
     color: #1a1438;
   }
 
   .modal-title {
     font-family: 'Sora', sans-serif;
-    font-size: 22px;
+    font-size: 1.375rem;
     font-weight: 700;
     color: #1a1438;
     text-align: center;
-    margin-bottom: 8px;
-    letter-spacing: -0.4px;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.025em;
   }
 
   .modal-sub {
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: #9a97b0;
     text-align: center;
     line-height: 1.6;
-    margin-bottom: 28px;
-    max-width: 320px;
+    margin-bottom: 1.75rem;
+    max-width: 20rem;
     margin-left: auto;
     margin-right: auto;
   }
@@ -390,19 +397,19 @@ const styles = `
   .subrole-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-bottom: 28px;
+    gap: 0.875rem;
+    margin-bottom: 1.75rem;
   }
 
   .subrole-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 0.625rem;
     background: #f7f6ff;
     border: 1.5px solid #e8e4f5;
-    border-radius: 16px;
-    padding: 22px 16px 18px;
+    border-radius: 1rem;
+    padding: 1.375rem 1rem 1.125rem;
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s, transform 0.15s, box-shadow 0.15s;
     user-select: none;
@@ -413,19 +420,19 @@ const styles = `
     border-color: #a29bfe;
     background: #f0eeff;
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(108,92,231,0.12);
+    box-shadow: 0 0.375rem 1.25rem rgba(108,92,231,0.12);
   }
 
   .subrole-card.selected {
     border-color: #6c5ce7;
     background: #ede9ff;
-    box-shadow: 0 4px 16px rgba(108,92,231,0.18);
+    box-shadow: 0 0.25rem 1rem rgba(108,92,231,0.18);
   }
 
   .subrole-card-check {
     position: absolute;
-    top: 10px; right: 10px;
-    width: 22px; height: 22px;
+    top: 0.625rem; right: 0.625rem;
+    width: 1.375rem; height: 1.375rem;
     border-radius: 50%;
     background: #6c5ce7;
     display: flex; align-items: center; justify-content: center;
@@ -435,27 +442,30 @@ const styles = `
   }
 
   .subrole-card.selected .subrole-card-check { opacity: 1; transform: scale(1); }
-  .subrole-card-check svg { width: 11px; height: 11px; }
+  .subrole-card-check svg { width: 0.6875rem; height: 0.6875rem; }
 
   .subrole-icon {
-    width: 54px; height: 54px;
-    border-radius: 14px;
+    width: 3.375rem; height: 3.375rem;
+    border-radius: 0.875rem;
     display: flex; align-items: center; justify-content: center;
-    font-size: 26px;
+    font-size: 1.625rem;
   }
 
   .subrole-icon.dev { background: linear-gradient(135deg, #4facfe, #00c6ff); }
   .subrole-icon.tester { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+  .subrole-icon.maintenance { background: linear-gradient(135deg, #f7971e, #ffd200); }
+  .subrole-icon.requirement { background: linear-gradient(135deg, #a18cd1, #fbc2eb); }
 
   .subrole-name {
     font-family: 'Sora', sans-serif;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 700;
     color: #1a1438;
+    text-align: center;
   }
 
   .subrole-desc {
-    font-size: 11.5px;
+    font-size: 0.71875rem;
     color: #9a97b0;
     text-align: center;
     line-height: 1.5;
@@ -463,41 +473,56 @@ const styles = `
 
   .btn-confirm {
     width: 100%;
-    height: 50px;
+    height: 3.125rem;
     border: none;
-    border-radius: 13px;
+    border-radius: 0.8125rem;
     background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
     color: #fff;
     font-family: 'Sora', sans-serif;
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 600;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    gap: 10px;
+    gap: 0.625rem;
     transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
-    box-shadow: 0 5px 20px rgba(108,92,231,0.38);
+    box-shadow: 0 0.3125rem 1.25rem rgba(108,92,231,0.38);
   }
 
-  .btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(108,92,231,0.5); }
+  .btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 0.5rem 1.75rem rgba(108,92,231,0.5); }
   .btn-confirm:active { transform: translateY(0); }
   .btn-confirm:disabled { opacity: 0.38; cursor: not-allowed; transform: none; box-shadow: none; }
-  .btn-confirm svg { width: 17px; height: 17px; }
+  .btn-confirm svg { width: 1.0625rem; height: 1.0625rem; }
 
-  /* ── MOBILE ── */
+  /* ── MOBILE / SMALL SCREENS ── */
   @media (max-width: 768px) {
     .page { flex-direction: column; }
-    .left { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 28px 24px 32px; }
-    .hero { padding: 24px 0 16px; }
-    .hero-title { font-size: 32px; letter-spacing: -1px; }
-    .hero-desc { font-size: 14px; margin-bottom: 28px; }
-    .trust-badges { gap: 16px; }
+    .left {
+      border-right: none;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding: 1.75rem 1.5rem 2rem;
+    }
+    .hero { padding: 1.5rem 0 1rem; }
+    .hero-desc { font-size: 0.875rem; margin-bottom: 1.75rem; }
+    .trust-badges { gap: 1rem; }
     .footer-links { display: none; }
-    .right { width: 100%; padding: 32px 24px 40px; }
-    .right-title { font-size: 22px; }
-    .modal { padding: 32px 20px 28px; }
-    .modal-title { font-size: 19px; }
-    .subrole-grid { gap: 10px; }
-    .subrole-icon { width: 46px; height: 46px; font-size: 22px; }
+    .right {
+      width: 100%;
+      padding: 2rem 1.5rem 2.5rem;
+    }
+    .right-title { font-size: 1.375rem; }
+    .modal { padding: 2rem 1.25rem 1.75rem; }
+    .modal-title { font-size: 1.1875rem; }
+    .subrole-grid { gap: 0.625rem; }
+    .subrole-icon { width: 2.875rem; height: 2.875rem; font-size: 1.375rem; }
+  }
+
+  /* ── HIGH ZOOM / SMALL VIEWPORT fallback ── */
+  @media (max-width: 900px) and (min-width: 769px) {
+    .right {
+      width: clamp(280px, 40%, 400px);
+      padding: 2rem 1.75rem;
+    }
+    .left { padding: 2rem 2rem; }
   }
 `;
 
@@ -607,12 +632,14 @@ export default function Homepage() {
               </div>
             </div>
           </div>
+
+        
         </div>
 
         {/* ── RIGHT ── */}
         <div className="right">
           <div className="right-title">How are you joining?</div>
-          <br></br>
+          <br />
           <div className="role-cards">
             {ROLES.map((role) => (
               <div
@@ -655,7 +682,6 @@ export default function Homepage() {
               <svg viewBox="0 0 15 15" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
                 <path d="M2 2l11 11M13 2L2 13"/>
               </svg>
-              X
             </button>
 
             <div className="modal-logo">
