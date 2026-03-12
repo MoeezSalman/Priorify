@@ -2,10 +2,12 @@ const mongoose = require("mongoose");
 
 const adminSchema = new mongoose.Schema(
   {
+    firstName: { type: String, required: true, trim: true },
+    lastName: { type: String, required: true, trim: true },
+
     username: { type: String, required: true, unique: true, trim: true },
     passwordHash: { type: String, required: true },
 
-    // ✅ add these:
     resetOtpHash: { type: String, default: null },
     resetOtpExpires: { type: Date, default: null },
   },

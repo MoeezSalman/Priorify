@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
 
@@ -12,12 +13,13 @@ const styles = `
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 16px;
   }
 
   .card {
     display: flex;
     width: 860px;
-    max-width: 98vw;
+    max-width: 100%;
     min-height: 580px;
     background: #fff;
     border-radius: 24px;
@@ -36,6 +38,7 @@ const styles = `
     justify-content: space-between;
     padding: 28px 28px 32px;
     overflow: hidden;
+    flex-shrink: 0;
   }
 
   .left-logo-row {
@@ -220,6 +223,7 @@ const styles = `
     padding: 28px 36px 20px;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
   }
 
   .form-title {
@@ -415,6 +419,121 @@ const styles = `
   }
 
   .success-sub { font-size: 13px; color: #9a97b0; }
+
+  /* Role badge */
+  .role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0eeff;
+    border: 1.5px solid #d4ccff;
+    border-radius: 99px;
+    padding: 4px 12px 4px 8px;
+    margin-bottom: 14px;
+    width: fit-content;
+  }
+
+  .role-badge-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #6c5ce7;
+    flex-shrink: 0;
+  }
+
+  .role-badge-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6c5ce7;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* ── MOBILE RESPONSIVE ── */
+  @media (max-width: 640px) {
+    body { padding: 0; align-items: stretch; }
+
+    .card {
+      flex-direction: column;
+      width: 100%;
+      min-height: 100dvh;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    /* Left panel becomes a compact header strip on mobile */
+    .left-panel {
+      width: 100%;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 20px;
+      min-height: auto;
+      flex-shrink: 0;
+      gap: 14px;
+    }
+
+    .left-panel::before {
+      top: -50px; left: -50px;
+      width: 160px; height: 160px;
+    }
+
+    .left-panel::after {
+      bottom: -40px; right: -40px;
+      width: 130px; height: 130px;
+    }
+
+    /* Hide the decorative profile card on mobile — show only logo + tagline */
+    .left-center { display: none; }
+
+    .left-logo-row { align-self: auto; }
+
+    .left-text-mobile {
+      flex: 1;
+      text-align: right;
+      position: relative;
+      z-index: 2;
+    }
+
+    .left-text-mobile p {
+      font-size: 11.5px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.5;
+    }
+
+    .left-text-mobile strong { color: #fff; font-weight: 600; }
+
+    /* Right panel (form) takes full remaining space */
+    .right-panel {
+      flex: 1;
+      padding: 24px 20px 20px;
+      overflow-y: auto;
+    }
+
+    .form-title { font-size: 22px; }
+    .form-sub { font-size: 12px; margin-bottom: 14px; }
+
+    .row-2 { flex-direction: column; gap: 0; margin-bottom: 0; }
+    .row-2 .field { margin-bottom: 10px; }
+
+    .field { margin-bottom: 10px; }
+    .field input { height: 42px; font-size: 13px; }
+
+    .terms-row { margin: 8px 0 12px; }
+    .terms-text { font-size: 12px; }
+
+    .btn-submit { height: 44px; font-size: 14px; }
+
+    .signin-row { padding-top: 10px; }
+  }
+
+  /* Tablet */
+  @media (min-width: 641px) and (max-width: 860px) {
+    .card { width: 100%; }
+    .left-panel { width: 38%; padding: 24px 20px 28px; }
+    .profile-card { max-width: 200px; padding: 14px 16px; }
+    .right-panel { padding: 24px 28px 18px; }
+    .form-title { font-size: 22px; }
+    .stat-num { font-size: 16px; }
+  }
 `;
 
 const SKILLS = [
@@ -422,10 +541,24 @@ const SKILLS = [
   { label: "Research", width: "55%" },
   { label: "Dev", width: "38%" },
 ];
+
 const API_BASE = "http://localhost:5000";
 
 export default function TaskySignup() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const roleState = location.state || {};
+
+  const roleLabel = roleState.role === "pm"
+    ? "Project Manager"
+    : roleState.subrole === "developer"
+    ? "Developer"
+    : roleState.subrole === "maintenance_engineer"
+    ? "Maintenance Engineer"
+    : roleState.subrole === "requirement_engineer"
+    ? "Requirement Engineer"
+    : null;
+
   const [form, setForm] = useState({
     firstName: "", lastName: "", email: "", password: "", confirmPassword: "", agreed: false,
   });
@@ -450,49 +583,44 @@ export default function TaskySignup() {
     setErrors((er) => ({ ...er, [field]: undefined }));
   };
 
-const handleSubmit = async () => {
-  const e = validate();
-  if (Object.keys(e).length) {
-    setErrors(e);
-    return;
-  }
+  const handleSubmit = async () => {
+    const e = validate();
+    if (Object.keys(e).length) { setErrors(e); return; }
 
-  setLoading(true);
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: form.firstName,
+          lastName: form.lastName,
+          username: form.email,
+          password: form.password,
+          role: roleState.role || null,
+          subrole: roleState.subrole || null,
+        }),
+      });
 
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/signup`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: form.email,      // using email as admin username
-        password: form.password,
-      }),
-    });
+      const data = await res.json();
 
-    const data = await res.json();
+      if (!res.ok) {
+        setErrors((prev) => ({ ...prev, email: data.message || "Signup failed" }));
+        return;
+      }
 
-    if (!res.ok) {
-      // show backend error on UI
+      localStorage.setItem("loggedInUser", JSON.stringify(data.admin));
+      setSubmitted(true);
+      setTimeout(() => navigate("/dashboard"), 1200);
+    } catch {
       setErrors((prev) => ({
         ...prev,
-        email: data.message || "Signup failed",
+        email: "Backend not reachable (check server running on 5000)",
       }));
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    // success
-    setSubmitted(true);
-     setTimeout(() => navigate("/dashboard"), 1200);
-  } catch {
-    setErrors((prev) => ({
-      ...prev,
-      email: "Backend not reachable (check server running on 5000)",
-    }));
-  } finally {
-    setLoading(false);
-    
-  }
-};
+  };
 
   return (
     <>
@@ -509,42 +637,44 @@ const handleSubmit = async () => {
             </div>
             <span className="left-logo-name">Priorify</span>
           </div>
+
+          {/* Shown only on desktop — hidden on mobile via CSS */}
           <div className="left-center">
-          <div className="profile-card">
-            <div className="profile-header">
-              <div className="avatar">🧑</div>
-              <div>
-                <div className="profile-name">Mirha Fatima</div>
-                <div className="profile-role">Project Manager</div>
-              </div>
-              <div className="check-badge">
-                <svg viewBox="0 0 14 14" fill="none">
-                  <path d="M2.5 7l3 3 6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-            </div>
-            <div className="stats-row">
-              <div className="stat-box">
-                <div className="stat-num">50+</div>
-                <div className="stat-label">Projects</div>
-              </div>
-              <div className="stat-box">
-                <div className="stat-num">120</div>
-                <div className="stat-label">Tasks Done</div>
-              </div>
-            </div>
-            {SKILLS.map((s) => (
-              <div className="skill-row" key={s.label}>
-                <div className="skill-label"><span>{s.label}</span></div>
-                <div className="skill-bar-bg">
-                  <div className="skill-bar-fill" style={{ width: s.width }} />
+            <div className="profile-card">
+              <div className="profile-header">
+                <div className="avatar">HA</div>
+                <div>
+                  <div className="profile-name">Haris Ali</div>
+                  <div className="profile-role">Project Manager</div>
+                </div>
+                <div className="check-badge">
+                  <svg viewBox="0 0 14 14" fill="none">
+                    <path d="M2.5 7l3 3 6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </div>
               </div>
-            ))}
-          </div>
-          <div className="left-text">
-            <p>Join thousands managing tasks in an <strong>easy and efficient way</strong> with Priorify.</p>
-          </div>
+              <div className="stats-row">
+                <div className="stat-box">
+                  <div className="stat-num">50+</div>
+                  <div className="stat-label">Projects</div>
+                </div>
+                <div className="stat-box">
+                  <div className="stat-num">120</div>
+                  <div className="stat-label">Tasks Done</div>
+                </div>
+              </div>
+              {SKILLS.map((s) => (
+                <div className="skill-row" key={s.label}>
+                  <div className="skill-label"><span>{s.label}</span></div>
+                  <div className="skill-bar-bg">
+                    <div className="skill-bar-fill" style={{ width: s.width }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="left-text">
+              <p>Join thousands managing tasks in an <strong>easy and efficient way</strong> with Priorify.</p>
+            </div>
           </div>
         </div>
 
@@ -564,6 +694,13 @@ const handleSubmit = async () => {
             <>
               <div className="form-title">Create Account</div>
               <div className="form-sub">Fill in the details below to get started</div>
+
+              {roleLabel && (
+                <div className="role-badge">
+                  <div className="role-badge-dot" />
+                  <span className="role-badge-text">{roleLabel}</span>
+                </div>
+              )}
 
               <div className="row-2">
                 <div className="field">
