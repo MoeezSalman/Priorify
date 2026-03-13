@@ -609,9 +609,17 @@ export default function TaskySignup() {
         return;
       }
 
-      localStorage.setItem("loggedInUser", JSON.stringify(data.admin));
+      localStorage.setItem("loggedInUser", JSON.stringify(data.user));
+
       setSubmitted(true);
-      setTimeout(() => navigate("/dashboard"), 1200);
+
+      setTimeout(() => {
+        if (data.user.role === "pm") {
+          navigate("/dashboard");       // Project Manager
+        } else {
+          navigate("/teamdashboard");   // Engineers
+        }
+      }, 1200);
     } catch {
       setErrors((prev) => ({
         ...prev,

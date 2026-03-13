@@ -2,50 +2,91 @@ const bcrypt = require("bcryptjs");
 const Admin = require("../models/Admin");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const Engineer = require("../models/Engineer");
+
 exports.createAdmin = async (req, res) => {
   try {
-    const { firstName, lastName, username, password } = req.body;
+
+    const { firstName, lastName, username, password, role, subrole } = req.body;
 
     if (!username || username.trim().length < 3) {
       return res.status(400).json({ message: "Username must be at least 3 chars." });
     }
+
     if (!password || password.length < 8) {
       return res.status(400).json({ message: "Password must be at least 8 chars." });
     }
-    if (!firstName || !firstName.trim()) {
-      return res.status(400).json({ message: "First name is required." });
-    }
+    const existingAdmin = await Admin.findOne({ username: username.trim() });
+const existingEngineer = await Engineer.findOne({ username: username.trim() });
 
-    if (!lastName || !lastName.trim()) {
-      return res.status(400).json({ message: "Last name is required." });
-    }
-
-    const existing = await Admin.findOne({ username: username.trim() });
-    if (existing) {
-      return res.status(409).json({ message: "Username already exists." });
-    }
-
+if (existingAdmin || existingEngineer) {
+  return res.status(409).json({ message: "Username already exists." });
+}
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const admin = await Admin.create({
-    firstName: firstName.trim(),
-    lastName: lastName.trim(),
-    username: username.trim(),
-    passwordHash
-    });
+    // PROJECT MANAGER -> ADMIN TABLE
+    if (role === "pm") {
 
-   return res.status(201).json({
-    message: "Admin created",
-    admin: {
-      id: admin._id,
-      firstName: admin.firstName,
-      lastName: admin.lastName,
-      username: admin.username
+      const existing = await Admin.findOne({ username: username.trim() });
+
+      
+
+      const admin = await Admin.create({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        username: username.trim(),
+        passwordHash,
+        role: "admin"
+      });
+
+      return res.status(201).json({
+      message: "Admin created",
+      user: {
+        id: admin._id,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        username: admin.username,
+        role: "pm"
+      }
+});
+
     }
-    });
+
+    // TEAM MEMBER -> ENGINEER TABLE
+    if (role === "tm") {
+
+      const existing = await Engineer.findOne({ username: username.trim() });
+
+      
+
+      const engineer = await Engineer.create({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        username: username.trim(),
+        role: subrole,
+        passwordHash,
+        appointed: false,
+        appointedBy: null
+      });
+
+      return res.status(201).json({
+        message: "Engineer created",
+        user: {
+          id: engineer._id,
+          firstName: engineer.firstName,
+          lastName: engineer.lastName,
+          username: engineer.username,
+          role: engineer.role
+        }
+      });
+
+    }
+
   } catch (err) {
+
     console.error(err);
     return res.status(500).json({ message: "Server error" });
+
   }
 };
 
@@ -57,26 +98,37 @@ exports.loginAdmin = async (req, res) => {
       return res.status(400).json({ message: "Username and password are required." });
     }
 
-    const admin = await Admin.findOne({ username: username.trim() });
-    if (!admin) {
+    // Check admin first
+    let user = await Admin.findOne({ username: username.trim() });
+    let role = "pm";
+
+    if (!user) {
+      // If not admin, check engineer
+      user = await Engineer.findOne({ username: username.trim() });
+      role = user?.role;
+    }
+
+    if (!user) {
       return res.status(401).json({ message: "Invalid credentials." });
     }
 
-    const ok = await bcrypt.compare(password, admin.passwordHash);
+    const ok = await bcrypt.compare(password, user.passwordHash);
+
     if (!ok) {
       return res.status(401).json({ message: "Invalid credentials." });
     }
 
-    // For now, just return success (later you can add JWT token)
     return res.status(200).json({
       message: "Login successful",
-      admin: {
-        id: admin._id,
-        firstName: admin.firstName,
-        lastName: admin.lastName,
-        username: admin.username,
-      },
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
+        role
+      }
     });
+
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Server error" });
@@ -101,8 +153,15 @@ exports.forgotPassword = async (req, res) => {
       return res.status(400).json({ message: "Email is required." });
     }
 
-    const admin = await Admin.findOne({ username: username.trim() });
-    if (!admin) {
+    let user = await Admin.findOne({ username: username.trim() });
+    let table = "admin";
+
+    if (!user) {
+      user = await Engineer.findOne({ username: username.trim() });
+      table = "engineer";
+    }
+
+    if (!user) {
       return res.status(404).json({ message: "No user found with this email." });
     }
 
@@ -110,13 +169,13 @@ exports.forgotPassword = async (req, res) => {
 
     const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
 
-    admin.resetOtpHash = otpHash;
-    admin.resetOtpExpires = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
-    await admin.save();
+    user.resetOtpHash = otpHash;
+    user.resetOtpExpires = new Date(Date.now() + 2 * 60 * 1000);
+    await user.save();
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: admin.username,
+      to: user.username,
       subject: "Priorify Reset OTP",
       text: `Your OTP is: ${otp}\nThis OTP expires in 2 minutes.`,
     });
@@ -136,19 +195,24 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "Email and OTP are required." });
     }
 
-    const admin = await Admin.findOne({ username: username.trim() });
-    if (!admin) return res.status(404).json({ message: "User not found." });
+    let user = await Admin.findOne({ username: username.trim() });
 
-    if (!admin.resetOtpHash || !admin.resetOtpExpires) {
+    if (!user) {
+      user = await Engineer.findOne({ username: username.trim() });
+    }
+
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    if (!user.resetOtpHash || !user.resetOtpExpires) {
       return res.status(400).json({ message: "OTP not requested." });
     }
 
-    if (admin.resetOtpExpires.getTime() < Date.now()) {
+    if (user.resetOtpExpires.getTime() < Date.now()) {
       return res.status(400).json({ message: "OTP expired." });
     }
 
     const otpHash = crypto.createHash("sha256").update(String(otp)).digest("hex");
-    if (otpHash !== admin.resetOtpHash) {
+    if (otpHash !== user.resetOtpHash) {
       return res.status(400).json({ message: "Invalid OTP." });
     }
 
@@ -171,26 +235,31 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: "Password must be at least 8 characters." });
     }
 
-    const admin = await Admin.findOne({ username: username.trim() });
-    if (!admin) return res.status(404).json({ message: "User not found." });
+    let user = await Admin.findOne({ username: username.trim() });
 
-    if (!admin.resetOtpHash || !admin.resetOtpExpires) {
+    if (!user) {
+      user = await Engineer.findOne({ username: username.trim() });
+    }
+
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    if (!user.resetOtpHash || !user.resetOtpExpires) {
       return res.status(400).json({ message: "OTP not requested." });
     }
 
-    if (admin.resetOtpExpires.getTime() < Date.now()) {
+    if (user.resetOtpExpires.getTime() < Date.now()) {
       return res.status(400).json({ message: "OTP expired." });
     }
 
     const otpHash = crypto.createHash("sha256").update(String(otp)).digest("hex");
-    if (otpHash !== admin.resetOtpHash) {
+    if (otpHash !== user.resetOtpHash) {
       return res.status(400).json({ message: "Invalid OTP." });
     }
 
-    admin.passwordHash = await bcrypt.hash(newPassword, 10);
-    admin.resetOtpHash = null;
-    admin.resetOtpExpires = null;
-    await admin.save();
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    user.resetOtpHash = null;
+    user.resetOtpExpires = null;
+    await user.save();
 
     return res.status(200).json({ message: "Password updated successfully." });
   } catch (err) {
