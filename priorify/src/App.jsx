@@ -9,6 +9,7 @@ import Dashboard from "./components/Dashboard";
 import TeamDashboard from "./components/TeamDashboard";
 import REPriority from "./components/REPriority";
 import MEPriority from "./components/MEPriority";
+import TeamsCreation from "./components/CreateTeams";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/teamdashboard" element={<TeamDashboard/>}/>
         <Route path="/REPriority" element={<REPriority/>}/>
         <Route path="/MEPriority" element={<MEPriority/>}/>
+        <Route path="/createteam" element={<TeamsCreation/>}/>
       </Routes>
     </Router>
   );
