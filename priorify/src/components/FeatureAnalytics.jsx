@@ -249,6 +249,8 @@ export default function FeatureAnalytics() {
                    onClick={() => { setActiveState("priority"); navigate("/priority"); }}>Priority</button>
                 <button style={activeState === "graph" ? activeButton : MiddleDivButton}
                    onClick={() => { setActiveState("graph"); navigate("/graph"); }}>Graph</button>
+                <button className={activeState === "Team" ? activeButton : MiddleDivButton}
+                  onClick={() => {setActiveState("Team"); navigate("/createteam");}}>Team</button>
             </div>
         </div>
 
