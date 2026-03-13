@@ -129,7 +129,8 @@ function TeamDashboard() {
     };
   }, [isMobileScreen, isSidebarOpen]);
 
-  const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
+  const storedUserString = localStorage.getItem("loggedInUser");
+  const storedUser = storedUserString ? JSON.parse(storedUserString) : null;
   const name = storedUser
     ? `${storedUser.firstName} ${storedUser.lastName}`
     : "JOE MAX";
@@ -143,14 +144,14 @@ function TeamDashboard() {
   });
 
   const navigate = useNavigate();
-  const role = "Requirement Engineer";
+  const role = storedUser?.role || "Engineer";
   const TeamName = "Hope Project";
 
   const teamMembers = [
     {
       id: 1,
       name: name,
-      role: "Team Leader",
+      role: storedUser?.role || "Engineer",
       isLoggedIn: true,
     },
     {
@@ -926,11 +927,11 @@ function TeamDashboard() {
                       : "sidebar-btn middle-div-button"
                   }
                   onClick={() => {
-                    if (role === "Requirement Engineer") {
+                    if (role === "requirement_engineer") {
                         setActiveState("REPriority");
                         navigate("/REPriority");
                     } 
-                    else if (role === "Maintenance Engineer") {
+                    else if (role === "maintenance_engineer") {
                         setActiveState("MEPriority");
                         navigate("/MEPriority");
                     }
