@@ -677,6 +677,20 @@ function Dashboard() {
                 >
                   Graph
                 </button>
+
+                <button
+                  className={
+                    activeState === "Team"
+                      ? "sidebar-btn active-button"
+                      : "sidebar-btn middle-div-button"
+                  }
+                  onClick={() => {
+                    setActiveState("Team");
+                    navigate("/createteam");
+                  }}
+                >
+                  Team
+                </button>
               </div>
             </div>
 
