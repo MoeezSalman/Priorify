@@ -1,7 +1,10 @@
 import React, { useState } from "react";
+<<<<<<< HEAD
+=======
 import { useNavigate } from "react-router-dom";
 import hamburger from '../assets/hamburger.png'
 import logo from '../assets/logo.png'
+>>>>>>> 838870d03609df48d04a084768e298c70b5022d0
 
 // --- Mock Data ---
 const initialFeatures = [
@@ -23,6 +26,10 @@ const priorityStyles = {
 
 const sentimentEmoji = { Positive: "😊", Negative: "😞", Neutral: "😐" };
 
+<<<<<<< HEAD
+export default function FeatureAnalytics() {
+  // Matching the screenshot's state: Sentiment "All" and Priority "Low"
+=======
 const LeftSideBar = {
     display:"flex",
     flexDirection:"column",
@@ -113,6 +120,7 @@ const hamburgerBtn = {
 
 
 export default function FeatureAnalytics() {
+>>>>>>> 838870d03609df48d04a084768e298c70b5022d0
   const [sentimentFilter, setSentimentFilter] = useState("All");
   const [priorityFilter, setPriorityFilter] = useState("Low");
   const [search, setSearch] = useState("");
@@ -127,6 +135,29 @@ export default function FeatureAnalytics() {
   const sprintItems = initialFeatures.filter((f) => f.sprint);
   const backlogItems = initialFeatures.filter((f) => !f.sprint);
 
+<<<<<<< HEAD
+  return (
+    <div style={{ background: "#f7f9fc", minHeight: "100vh", padding: "32px", fontFamily: "Inter, system-ui, sans-serif" }}>
+      
+      {/* --- HEADER --- */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
+        <div>
+          <h1 style={{ fontSize: "24px", fontWeight: "700", color: "#1a202c", margin: 0 }}>Feature Analytics</h1>
+          <p style={{ fontSize: "13px", color: "#a0aec0", marginTop: "4px" }}>13 March 2021</p>
+        </div>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+            <svg style={{ position: "absolute", left: "10px" }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a0aec0" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input 
+              type="text" 
+              placeholder="Search features..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ padding: "8px 12px 8px 32px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "13px", width: "180px", outline: "none" }}
+            />
+          </div>
+          <button style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "8px 12px", fontSize: "13px", color: "#4a5568", cursor: "pointer" }}>
+=======
   const navigate = useNavigate();
   const getInitials = (name) => {
     const words=name.trim().split(" ");
@@ -298,6 +329,7 @@ export default function FeatureAnalytics() {
             />
           </div>
           <button style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "8px 12px", fontSize: "13px", color: "#4a5568", cursor: "pointer", whiteSpace: "nowrap" }}>
+>>>>>>> 838870d03609df48d04a084768e298c70b5022d0
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4299e1" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             13 March 2021
           </button>
@@ -305,6 +337,46 @@ export default function FeatureAnalytics() {
       </div>
 
       {/* --- FILTERS --- */}
+<<<<<<< HEAD
+      <div style={{ background: "#fff", borderRadius: "12px", padding: "12px 20px", display: "flex", alignItems: "center", gap: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", marginBottom: "24px" }}>
+        <span style={{ fontSize: "12px", fontWeight: "700", color: "#cbd5e0", letterSpacing: "0.05em" }}>FILTERS</span>
+        
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", borderRight: "1px solid #edf2f7", paddingRight: "20px" }}>
+          <span style={{ fontSize: "13px", color: "#718096" }}>Sentiment:</span>
+          {["All", "Positive", "Negative", "Neutral"].map((s) => (
+            <button 
+              key={s}
+              onClick={() => setSentimentFilter(s)}
+              style={{
+                padding: "4px 12px", borderRadius: "20px", border: sentimentFilter === s ? "none" : "1px solid #e2e8f0",
+                background: sentimentFilter === s ? "#4299e1" : "transparent",
+                color: sentimentFilter === s ? "#fff" : "#4a5568",
+                fontSize: "12px", fontWeight: "500", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px"
+              }}>
+              {s !== "All" && <span>{sentimentEmoji[s]}</span>} {s}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", borderRight: "1px solid #edf2f7", paddingRight: "20px" }}>
+          <span style={{ fontSize: "13px", color: "#718096" }}>Priority:</span>
+          {["All", "High", "Medium", "Low"].map((p) => (
+            <button 
+              key={p}
+              onClick={() => setPriorityFilter(p)}
+              style={{
+                padding: "4px 12px", borderRadius: "20px", border: priorityFilter === p ? "none" : "1px solid #e2e8f0",
+                background: priorityFilter === p ? (p === "Low" ? "#c6f6d5" : p === "High" ? "#fed7d7" : p === "Medium" ? "#feebc8" : "#4299e1") : "transparent",
+                color: priorityFilter === p ? (p === "Low" ? "#276749" : p === "High" ? "#9b2c2c" : p === "Medium" ? "#9c4221" : "#fff") : "#4a5568",
+                fontSize: "12px", fontWeight: "500", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px"
+              }}>
+              {p !== "All" && <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: priorityStyles[p].dot }} />} {p}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+=======
       <div className="fa-filters" style={{ background: "#fff", borderRadius: "12px", padding: "12px 20px", display: "flex", alignItems: "center", gap: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", marginBottom: "24px", overflowX: "auto" }}>
         <span style={{ fontSize: "12px", fontWeight: "700", color: "#cbd5e0", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>FILTERS</span>
 
@@ -357,6 +429,7 @@ export default function FeatureAnalytics() {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px", whiteSpace: "nowrap" }}>
+>>>>>>> 838870d03609df48d04a084768e298c70b5022d0
           <span style={{ fontSize: "13px", color: "#718096" }}>Date:</span>
           <select style={{ border: "1px solid #e2e8f0", borderRadius: "8px", padding: "4px 8px", fontSize: "13px", color: "#4a5568", outline: "none" }}>
             <option>All Time</option>
@@ -365,8 +438,13 @@ export default function FeatureAnalytics() {
       </div>
 
       {/* --- FEATURE REQUESTS TABLE --- */}
+<<<<<<< HEAD
+      <div style={{ background: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", marginBottom: "24px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+=======
       <div style={{ background: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", marginBottom: "24px", overflowX: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
+>>>>>>> 838870d03609df48d04a084768e298c70b5022d0
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <h2 style={{ fontSize: "16px", fontWeight: "700", color: "#2d3748", margin: 0 }}>Feature Requests</h2>
             <span style={{ background: "#edf2f7", color: "#718096", fontSize: "11px", fontWeight: "600", padding: "2px 8px", borderRadius: "10px" }}>{filteredFeatures.length} features</span>
@@ -374,6 +452,14 @@ export default function FeatureAnalytics() {
           <span style={{ fontSize: "12px", color: "#cbd5e0" }}>Click Edit to manually set priority</span>
         </div>
 
+<<<<<<< HEAD
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ textAlign: "left", borderBottom: "1px solid #edf2f7" }}>
+              {["FEATURE NAME", "MENTIONS", "SENTIMENT SCORE", "PRIORITY", "DATE ADDED", "ACTION"].map(h => (
+                <th key={h} style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>{h}</th>
+              ))}
+=======
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "480px" }}>
           <thead>
             <tr style={{ textAlign: "left", borderBottom: "1px solid #edf2f7" }}>
@@ -383,17 +469,27 @@ export default function FeatureAnalytics() {
               <th style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>PRIORITY</th>
               <th className="fa-col-date" style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>DATE ADDED</th>
               <th className="fa-col-action" style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>ACTION</th>
+>>>>>>> 838870d03609df48d04a084768e298c70b5022d0
             </tr>
           </thead>
           <tbody>
             {filteredFeatures.map((f) => (
               <tr key={f.id} style={{ borderBottom: "1px solid #f7fafc" }}>
+<<<<<<< HEAD
+                <td style={{ padding: "16px 0", fontSize: "14px", color: "#4a5568", fontWeight: "500" }}>
+                  <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: priorityStyles[f.priority].dot, marginRight: "10px" }} />
+                  {f.name}
+                </td>
+                <td style={{ fontSize: "14px", color: "#4299e1", fontWeight: "700" }}>{f.mentions}</td>
+                <td>
+=======
                 <td className="fa-table-cell fa-table-name" style={{ padding: "16px 0", fontSize: "14px", color: "#4a5568", fontWeight: "500" }}>
                   <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: priorityStyles[f.priority].dot, marginRight: "10px", flexShrink: 0 }} />
                   {f.name}
                 </td>
                 <td className="fa-table-cell" style={{ fontSize: "14px", color: "#4299e1", fontWeight: "700", padding: "16px 8px 16px 0" }}>{f.mentions}</td>
                 <td className="fa-col-score fa-table-cell" style={{ padding: "16px 8px 16px 0" }}>
+>>>>>>> 838870d03609df48d04a084768e298c70b5022d0
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <div style={{ width: "80px", height: "6px", background: "#edf2f7", borderRadius: "3px", overflow: "hidden" }}>
                       <div style={{ width: `${f.score}%`, height: "100%", background: "#ed8936" }} />
@@ -401,6 +497,15 @@ export default function FeatureAnalytics() {
                     <span style={{ fontSize: "13px", color: "#ed8936", fontWeight: "700" }}>+{f.score}</span>
                   </div>
                 </td>
+<<<<<<< HEAD
+                <td>
+                  <span style={{ background: priorityStyles[f.priority].bg, color: priorityStyles[f.priority].text, padding: "4px 12px", borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}>
+                    {f.priority}
+                  </span>
+                </td>
+                <td style={{ fontSize: "13px", color: "#718096" }}>{f.date}</td>
+                <td style={{ fontSize: "13px", color: "#a0aec0" }}>
+=======
                 <td className="fa-table-cell" style={{ padding: "16px 8px 16px 0" }}>
                   <span style={{ background: priorityStyles[f.priority].bg, color: priorityStyles[f.priority].text, padding: "4px 12px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", whiteSpace: "nowrap" }}>
                     {f.priority}
@@ -408,6 +513,7 @@ export default function FeatureAnalytics() {
                 </td>
                 <td className="fa-col-date fa-table-cell" style={{ fontSize: "13px", color: "#718096", padding: "16px 8px 16px 0", whiteSpace: "nowrap" }}>{f.date}</td>
                 <td className="fa-col-action fa-table-cell" style={{ fontSize: "13px", color: "#a0aec0", padding: "16px 0" }}>
+>>>>>>> 838870d03609df48d04a084768e298c70b5022d0
                   <span style={{ marginRight: "8px" }}>—</span>
                   <button style={{ background: "none", border: "none", color: "#4299e1", cursor: "pointer", padding: 0, fontSize: "13px", fontWeight: "500" }}>Edit</button>
                 </td>
@@ -418,6 +524,15 @@ export default function FeatureAnalytics() {
       </div>
 
       {/* --- BOTTOM PANELS --- */}
+<<<<<<< HEAD
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+        {/* Sprint Backlog */}
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <h2 style={{ fontSize: "15px", fontWeight: "700", color: "#2d3748", margin: 0 }}>Sprint Backlog</h2>
+              <span style={{ background: "#ebf8ff", color: "#3182ce", fontSize: "10px", fontWeight: "800", padding: "2px 8px", borderRadius: "10px" }}>ACTIVE SPRINT</span>
+=======
       <div className="fa-bottom-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
         {/* Sprint Backlog */}
         <div style={{ background: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
@@ -425,16 +540,24 @@ export default function FeatureAnalytics() {
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <h2 style={{ fontSize: "15px", fontWeight: "700", color: "#2d3748", margin: 0 }}>Sprint Backlog</h2>
               <span style={{ background: "#ebf8ff", color: "#3182ce", fontSize: "10px", fontWeight: "800", padding: "2px 8px", borderRadius: "10px", whiteSpace: "nowrap" }}>ACTIVE SPRINT</span>
+>>>>>>> 838870d03609df48d04a084768e298c70b5022d0
             </div>
             <span style={{ fontSize: "12px", color: "#cbd5e0" }}>Top 3</span>
           </div>
           {sprintItems.map(item => (
             <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #f7fafc" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+<<<<<<< HEAD
+                <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#4299e1", color: "#fff", fontSize: "12px", fontWeight: "700", display: "flex", alignItems: "center", justifyContent: "center" }}>{item.rank}</span>
+                <div>
+                  <div style={{ fontSize: "14px", fontWeight: "600", color: "#2d3748" }}>{item.name}</div>
+                  <div style={{ fontSize: "12px", color: "#a0aec0" }}>{item.mentions} mentions <span style={{ margin: "0 4px" }}>•</span> 
+=======
                 <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#4299e1", color: "#fff", fontSize: "12px", fontWeight: "700", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{item.rank}</span>
                 <div>
                   <div style={{ fontSize: "14px", fontWeight: "600", color: "#2d3748" }}>{item.name}</div>
                   <div style={{ fontSize: "12px", color: "#a0aec0" }}>{item.mentions} mentions <span style={{ margin: "0 4px" }}>•</span>
+>>>>>>> 838870d03609df48d04a084768e298c70b5022d0
                     <span style={{ color: priorityStyles[item.priority].text }}>{item.priority}</span>
                   </div>
                 </div>
@@ -446,17 +569,28 @@ export default function FeatureAnalytics() {
 
         {/* Product Backlog */}
         <div style={{ background: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+<<<<<<< HEAD
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+=======
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
+>>>>>>> 838870d03609df48d04a084768e298c70b5022d0
             <h2 style={{ fontSize: "15px", fontWeight: "700", color: "#2d3748", margin: 0 }}>Product Backlog</h2>
             <span style={{ color: "#cbd5e0", fontSize: "12px" }}>{backlogItems.length} unresolved</span>
           </div>
           {backlogItems.map(item => (
             <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #f7fafc" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+<<<<<<< HEAD
+                <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#edf2f7", color: "#718096", fontSize: "12px", fontWeight: "700", display: "flex", alignItems: "center", justifyContent: "center" }}>{item.rank}</span>
+                <div>
+                  <div style={{ fontSize: "14px", fontWeight: "600", color: "#2d3748" }}>{item.name}</div>
+                  <div style={{ fontSize: "12px", color: "#a0aec0" }}>{item.mentions} mentions <span style={{ margin: "0 4px" }}>•</span> 
+=======
                 <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#edf2f7", color: "#718096", fontSize: "12px", fontWeight: "700", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{item.rank}</span>
                 <div>
                   <div style={{ fontSize: "14px", fontWeight: "600", color: "#2d3748" }}>{item.name}</div>
                   <div style={{ fontSize: "12px", color: "#a0aec0" }}>{item.mentions} mentions <span style={{ margin: "0 4px" }}>•</span>
+>>>>>>> 838870d03609df48d04a084768e298c70b5022d0
                     <span style={{ color: priorityStyles[item.priority].text }}>{item.priority}</span>
                   </div>
                 </div>
@@ -467,6 +601,9 @@ export default function FeatureAnalytics() {
         </div>
       </div>
     </div>
+<<<<<<< HEAD
+=======
   </div>
+>>>>>>> 838870d03609df48d04a084768e298c70b5022d0
   );
 }
