@@ -1,37 +1,35 @@
 const mongoose = require("mongoose");
 
-const adminSchema = new mongoose.Schema(
+const engineerSchema = new mongoose.Schema(
 {
   firstName: { type: String, required: true, trim: true },
   lastName: { type: String, required: true, trim: true },
 
   username: { type: String, required: true, unique: true, trim: true },
-  passwordHash: { type: String, required: true },
 
   role: {
     type: String,
-    default: "admin",
-    immutable: true
+    enum: ["maintenance_engineer", "requirement_engineer"],
+    required: true
   },
 
-  team: {
-    teamName: {
-      type: String,
-      default: "My Team"
-    },
-
-    members: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Engineer"
-      }
-    ]
-  },
+  passwordHash: { type: String, required: true },
 
   resetOtpHash: { type: String, default: null },
   resetOtpExpires: { type: Date, default: null },
+
+  appointed: {
+    type: Boolean,
+    default: false
+  },
+
+  appointedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    default: null
+  }
 },
 { timestamps: true }
 );
 
-module.exports = mongoose.model("Admin", adminSchema);
+module.exports = mongoose.model("Engineer", engineerSchema);

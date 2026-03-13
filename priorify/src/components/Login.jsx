@@ -467,9 +467,17 @@ export default function Login() {
         setErrors((prev) => ({ ...prev, password: data.message || "Login failed" }));
         return;
       }
-      localStorage.setItem("loggedInUser", JSON.stringify(data.admin));
+      localStorage.setItem("loggedInUser", JSON.stringify(data.user));
+
       setSubmitted(true);
-      setTimeout(() => navigate("/dashboard"), 800);
+
+      setTimeout(() => {
+        if (data.user.role === "pm") {
+          navigate("/dashboard");
+        } else {
+          navigate("/teamdashboard");
+        }
+      }, 800);
     } catch {
       setErrors((prev) => ({
         ...prev,
