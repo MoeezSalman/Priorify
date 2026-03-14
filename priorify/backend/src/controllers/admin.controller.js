@@ -267,3 +267,194 @@ exports.resetPassword = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
+
+exports.createTeam = async (req, res) => {
+  try {
+    const { adminId, teamName, focus, members } = req.body;
+
+    const admin = await Admin.findById(adminId);
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    // Ensure team array exists
+    if (!admin.team) {
+      admin.team = [];
+    }
+
+    admin.team.push({
+      teamName,
+      focus,
+      members
+    });
+
+    await admin.save();
+
+    // Update engineers
+    await Engineer.updateMany(
+      { _id: { $in: members } },
+      {
+        $set: {
+          appointed: true,
+          appointedBy: adminId
+        }
+      }
+    );
+
+    res.status(200).json({
+      message: "Team created successfully"
+    });
+
+  } catch (err) {
+    console.error("createTeam error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
+exports.getEngineers = async (req, res) => {
+
+  const engineers = await Engineer.find({
+    appointed: false
+  });
+
+  res.json(engineers);
+};
+
+exports.getTeams = async (req, res) => {
+  try {
+
+    const admin = await Admin.findById(req.params.adminId)
+      .populate("team.members");
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    res.json(admin.team);
+
+  } catch (err) {
+
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+
+  }
+};
+
+exports.updateTeam = async (req, res) => {
+
+  const { adminId, teamName, members } = req.body;
+  const { teamId } = req.params;
+
+  try {
+
+    const admin = await Admin.findById(adminId);
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    const team = admin.team.id(teamId);
+
+    if (!team) {
+      return res.status(404).json({ message: "Team not found" });
+    }
+
+    // previous members
+    const oldMembers = team.members.map(m => m.toString());
+
+    // new members
+    const newMembers = members;
+
+    // detect removed members
+    const removedMembers = oldMembers.filter(
+      id => !newMembers.includes(id)
+    );
+
+    // detect added members
+    const addedMembers = newMembers.filter(
+      id => !oldMembers.includes(id)
+    );
+
+    // update team
+    team.teamName = teamName;
+    team.members = newMembers;
+
+    // REMOVE members from team
+    if (removedMembers.length > 0) {
+      await Engineer.updateMany(
+        { _id: { $in: removedMembers } },
+        {
+          $set: {
+            appointed: false,
+            appointedBy: null
+          }
+        }
+      );
+    }
+
+    // ADD members to team
+    if (addedMembers.length > 0) {
+      await Engineer.updateMany(
+        { _id: { $in: addedMembers } },
+        {
+          $set: {
+            appointed: true,
+            appointedBy: adminId
+          }
+        }
+      );
+    }
+
+    await admin.save();
+
+    res.json({ message: "Team updated successfully" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+
+};
+
+exports.deleteTeam = async (req, res) => {
+  try {
+    const { adminId } = req.body;
+    const { teamId } = req.params;
+
+    const admin = await Admin.findById(adminId);
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    const team = admin.team.id(teamId);
+
+    if (!team) {
+      return res.status(404).json({ message: "Team not found" });
+    }
+
+    const memberIds = team.members;
+
+    admin.team.pull(teamId);
+
+    await Engineer.updateMany(
+      { _id: { $in: memberIds } },
+      { $set: { appointed: false, appointedBy: null } }
+    );
+
+    await admin.save();
+
+    res.json({ message: "Team deleted successfully" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
