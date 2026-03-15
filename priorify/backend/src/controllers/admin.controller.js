@@ -457,4 +457,27 @@ exports.deleteTeam = async (req, res) => {
 };
 
 
+exports.getEngineerTeam = async (req, res) => {
+  try {
 
+    const engineerId = req.params.engineerId;
+
+    const admin = await Admin.findOne({
+      "team.members": engineerId
+    }).populate("team.members");
+
+    if (!admin) {
+      return res.json(null);
+    }
+
+    const team = admin.team.find(t =>
+      t.members.some(m => m._id.toString() === engineerId)
+    );
+
+    res.json(team);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
