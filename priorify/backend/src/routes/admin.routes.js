@@ -10,7 +10,8 @@ const {
   getTeams,
   updateTeam,
   deleteTeam,
-  getEngineerTeam
+  getEngineerTeam,
+  sendReportEmail  
 } = require("../controllers/admin.controller");
 
 router.post("/signup", createAdmin);
@@ -26,4 +27,5 @@ router.get("/teams/:adminId",getTeams);
 router.put("/update-team/:teamId", updateTeam);
 router.delete("/delete-team/:teamId", deleteTeam);
 router.get("/engineer-team/:engineerId", getEngineerTeam);
+router.post("/send-report", sendReportEmail);
 module.exports = router;
