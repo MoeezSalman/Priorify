@@ -481,3 +481,47 @@ exports.getEngineerTeam = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+exports.sendReportEmail = async (req, res) => {
+  try {
+    const { recipientEmail, recipientName, senderName, pdfBase64 } = req.body;
+
+    if (!recipientEmail) {
+      return res.status(400).json({ message: "Recipient email is required." });
+    }
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: recipientEmail,
+      subject: `Feature Analytics Report from ${senderName}`,
+      html: `
+        <div style="font-family: system-ui, sans-serif; padding: 24px;">
+          <h2 style="color: #1a1a2e;">Feature Analytics Report</h2>
+          <p>Hi <strong>${recipientName}</strong>,</p>
+          <p><strong>${senderName}</strong> has shared the latest feature analytics report with you.</p>
+          <p style="color: #9ca3af; font-size: 12px;">Please find the PDF report attached.</p>
+        </div>
+      `,
+    };
+
+    // Attach PDF if provided
+    if (pdfBase64) {
+      mailOptions.attachments = [
+        {
+          filename: "FeatureAnalyticsReport.pdf",
+          content: pdfBase64,
+          encoding: "base64",
+          contentType: "application/pdf",
+        },
+      ];
+    }
+
+    await transporter.sendMail(mailOptions);
+    return res.status(200).json({ message: "Report sent successfully." });
+
+  } catch (err) {
+    console.error("sendReportEmail error:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
