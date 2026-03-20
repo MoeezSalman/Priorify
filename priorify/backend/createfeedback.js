@@ -21,6 +21,14 @@ const feedbackData = [
     resolve: false,
   },
   {
+    feedback: "Login screen is not responsive",
+    resolve: false,
+  },
+  {
+    feedback: "There should be better UI.",
+    resolve: false,
+  },
+  {
     feedback: "The UI is clean and modern.",
     resolve: true,
   },
