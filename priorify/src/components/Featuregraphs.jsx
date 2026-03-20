@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import initialFeatures from '../data/featuresData';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -150,10 +151,144 @@ const hamburgerBtn = {
     flexShrink: 0,
 }
 
+
+function SendReportModal({ members, onClose, senderName, generatePDF }) {
+  const [selected, setSelected] = useState([]);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState([]);
+  const [search, setSearch] = useState("");
+
+  const toggle = (id) =>
+    setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+
+  const filtered = members.filter(m =>
+    `${m.firstName} ${m.lastName}`.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleSend = async () => {
+    if (selected.length === 0) return;
+    setSending(true);
+    let pdfBase64 = null;
+    try { pdfBase64 = await generatePDF(); } catch (err) { console.error("PDF generation failed:", err); }
+    const results = await Promise.all(
+      selected.map(id => {
+        const m = members.find(x => x._id === id);
+        return fetch("http://localhost:5000/api/admin/send-report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recipientEmail: m.username,
+            recipientName: `${m.firstName} ${m.lastName}`,
+            senderName,
+            pdfBase64,
+          }),
+        }).then(r => ({ id, ok: r.ok }));
+      })
+    );
+    setSent(results.filter(r => r.ok).map(r => r.id));
+    setSending(false);
+  };
+
+  const allSent = sent.length > 0 && sent.length === selected.length;
+
+  return (
+    <div
+      style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div style={{ background: "#fff", borderRadius: 20, padding: 32, width: 480, maxWidth: "95vw", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 64px rgba(0,0,0,0.15)", fontFamily: "system-ui, sans-serif" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "#111827" }}>Send Report</h2>
+            <p style={{ margin: "4px 0 0", fontSize: 13, color: "#9ca3af" }}>Select team members to receive the analytics report</p>
+          </div>
+          <button onClick={onClose} style={{ width: 34, height: 34, borderRadius: "50%", border: "none", background: "#f3f4f6", color: "#6b7280", fontSize: 18, cursor: "pointer" }}>×</button>
+        </div>
+        <hr style={{ border: "none", borderTop: "1px solid #f3f4f6", margin: "16px 0" }} />
+        <div style={{ position: "relative", marginBottom: 12 }}>
+          <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "#9ca3af" }}>🔍</span>
+          <input placeholder="Search members..." value={search} onChange={e => setSearch(e.target.value)}
+            style={{ width: "100%", padding: "9px 12px 9px 36px", borderRadius: 10, border: "1.5px solid #e5e7eb", fontSize: 13, color: "#111827", background: "#f9fafb", outline: "none", boxSizing: "border-box" }} />
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <span style={{ fontSize: 12, color: "#6b7280" }}>{selected.length} of {members.length} selected</span>
+          <button onClick={() => setSelected(selected.length === members.length ? [] : members.map(m => m._id))}
+            style={{ fontSize: 12, color: "#6366f1", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+            {selected.length === members.length ? "Deselect All" : "Select All"}
+          </button>
+        </div>
+        <div style={{ border: "1.5px solid #e5e7eb", borderRadius: 12, overflow: "hidden", marginBottom: 20, maxHeight: 260, overflowY: "auto" }}>
+          {filtered.length === 0 ? (
+            <div style={{ padding: 20, textAlign: "center", color: "#9ca3af", fontSize: 13 }}>No members found</div>
+          ) : (
+            filtered.map((m, idx) => {
+              const isSelected = selected.includes(m._id);
+              const wasSent = sent.includes(m._id);
+              return (
+                <div key={m._id} onClick={() => !wasSent && toggle(m._id)}
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderBottom: idx < filtered.length - 1 ? "1px solid #f3f4f6" : "none", background: wasSent ? "#f0fdf4" : isSelected ? "#f5f3ff" : "#fff", cursor: wasSent ? "default" : "pointer" }}>
+                  <div style={{ width: 38, height: 38, borderRadius: "50%", background: "#6366f1", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>
+                    {m.firstName[0]}{m.lastName[0]}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{m.firstName} {m.lastName}</div>
+                    <div style={{ fontSize: 12, color: "#9ca3af" }}>{m.username} · {m.role}</div>
+                  </div>
+                  {wasSent ? (
+                    <span style={{ fontSize: 12, color: "#16a34a", fontWeight: 700, background: "#dcfce7", padding: "3px 10px", borderRadius: 20 }}>✓ Sent</span>
+                  ) : (
+                    <div style={{ width: 20, height: 20, borderRadius: 5, border: `2px solid ${isSelected ? "#6366f1" : "#d1d5db"}`, background: isSelected ? "#6366f1" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      {isSelected && <span style={{ color: "#fff", fontSize: 12, fontWeight: 700 }}>✓</span>}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+        <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 10, padding: "10px 14px", marginBottom: 20, fontSize: 12, color: "#1d4ed8" }}>
+          📧 Each selected member will receive an email with the <strong>feature analytics PDF</strong> attached.
+        </div>
+        {allSent ? (
+          <button onClick={onClose} style={{ width: "100%", padding: "11px 0", borderRadius: 10, border: "none", background: "#16a34a", color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+            ✓ All Reports Sent — Close
+          </button>
+        ) : (
+          <div style={{ display: "flex", gap: 12 }}>
+            <button onClick={onClose} style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", color: "#374151", fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Cancel</button>
+            <button onClick={handleSend} disabled={selected.length === 0 || sending}
+              style={{ flex: 2, padding: "11px 0", borderRadius: 10, border: "none", background: selected.length === 0 ? "#a5b4fc" : sending ? "#818cf8" : "#6366f1", color: "#fff", fontWeight: 700, fontSize: 14, cursor: selected.length === 0 || sending ? "not-allowed" : "pointer" }}>
+              {sending ? "⏳ Generating & Sending PDF…" : `Send to ${selected.length} member${selected.length !== 1 ? "s" : ""}`}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function FeatureGraphs() {
   const [trendFilter, setTrendFilter] = useState("Monthly");
   const [priorityFilter, setPriorityFilter] = useState("All Time");
-
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const graphsSectionRef = useRef(null);
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!storedUser) return;
+    fetch(`http://localhost:5000/api/admin/teams/${storedUser.id}`)
+      .then(res => res.json())
+      .then(data => {
+        const members = [];
+        data.forEach(team => {
+          team.members.forEach(m => {
+            if (!members.find(x => x._id === m._id)) members.push(m);
+          });
+        });
+        setTeamMembers(members);
+      })
+      .catch(err => console.error("Error fetching team members:", err));
+  }, []);
   const selectStyle = {
     border: "1px solid #e5e7eb", borderRadius: 8, padding: "5px 10px",
     fontSize: 12, color: "#555", background: "#fff", cursor: "pointer"
@@ -174,6 +309,103 @@ export default function FeatureGraphs() {
   
     const [activeState,setActiveState] = useState("graph")
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    const generatePDF = async () => {
+    const { default: html2canvas } = await import("html2canvas");
+    const { default: jsPDF } = await import("jspdf");
+
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth - 20;
+
+    // --- PAGE 1: Graphs ---
+    const graphsElement = graphsSectionRef.current;
+    if (graphsElement) {
+      const graphsCanvas = await html2canvas(graphsElement, {
+        scale: 1.5, useCORS: true, backgroundColor: "#f5f6fa", logging: false,
+      });
+      const graphsImgHeight = (graphsCanvas.height * imgWidth) / graphsCanvas.width;
+      pdf.setFontSize(16);
+      pdf.setTextColor(26, 26, 46);
+      pdf.text("Feature Analytics Report — Graphs", 10, 10);
+      let yPosition = 20;
+      let remainingHeight = graphsImgHeight;
+      while (remainingHeight > 0) {
+        const sliceHeight = Math.min(remainingHeight, pageHeight - yPosition - 10);
+        const sourceY = (graphsImgHeight - remainingHeight) * (graphsCanvas.height / graphsImgHeight);
+        const sourceHeight = sliceHeight * (graphsCanvas.height / graphsImgHeight);
+        const sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width = graphsCanvas.width;
+        sliceCanvas.height = sourceHeight;
+        const ctx = sliceCanvas.getContext("2d");
+        ctx.drawImage(graphsCanvas, 0, sourceY, graphsCanvas.width, sourceHeight, 0, 0, graphsCanvas.width, sourceHeight);
+        pdf.addImage(sliceCanvas.toDataURL("image/jpeg", 0.85), "JPEG", 10, yPosition, imgWidth, sliceHeight);
+        remainingHeight -= sliceHeight;
+        if (remainingHeight > 0) { pdf.addPage(); yPosition = 10; }
+      }
+    }
+
+    // --- PAGE 2: Feature Table (fetch from FeatureAnalytics page) ---
+    // We create a temporary hidden div, render the table into it, and screenshot it
+    const tableData = initialFeatures;
+
+    const priorityColors = { High: "#e53e3e", Medium: "#dd6b20", Low: "#38a169" };
+
+    const tempDiv = document.createElement("div");
+    tempDiv.style.cssText = "position:fixed;left:-9999px;top:0;width:900px;background:#fff;padding:24px;font-family:system-ui,sans-serif;";
+    tempDiv.innerHTML = `
+      <h2 style="margin:0 0 16px;font-size:18px;font-weight:700;color:#1a202c;">Feature Requests Table</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="background:#1a1f2e;color:white;">
+            <th style="padding:10px 12px;text-align:left;">Feature Name</th>
+            <th style="padding:10px 12px;text-align:left;">Mentions</th>
+            <th style="padding:10px 12px;text-align:left;">Sentiment Score</th>
+            <th style="padding:10px 12px;text-align:left;">Priority</th>
+            <th style="padding:10px 12px;text-align:left;">Sentiment</th>
+            <th style="padding:10px 12px;text-align:left;">Date Added</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tableData.map((f, i) => `
+            <tr style="background:${i % 2 === 0 ? '#fff' : '#f9fafb'};">
+              <td style="padding:10px 12px;border-bottom:1px solid #eee;font-weight:500;color:#2d3748;">${f.name}</td>
+              <td style="padding:10px 12px;border-bottom:1px solid #eee;color:#4299e1;font-weight:700;">${f.mentions}</td>
+              <td style="padding:10px 12px;border-bottom:1px solid #eee;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="width:80px;height:6px;background:#edf2f7;border-radius:3px;overflow:hidden;">
+                    <div style="width:${f.score}%;height:100%;background:#ed8936;"></div>
+                  </div>
+                  <span style="color:#ed8936;font-weight:700;">+${f.score}</span>
+                </div>
+              </td>
+              <td style="padding:10px 12px;border-bottom:1px solid #eee;">
+                <span style="color:${priorityColors[f.priority]};font-weight:700;">${f.priority}</span>
+              </td>
+              <td style="padding:10px 12px;border-bottom:1px solid #eee;color:#4a5568;">${f.sentiment}</td>
+              <td style="padding:10px 12px;border-bottom:1px solid #eee;color:#718096;">${f.date}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+    document.body.appendChild(tempDiv);
+
+    const tableCanvas = await html2canvas(tempDiv, {
+      scale: 1.5, useCORS: true, backgroundColor: "#fff", logging: false,
+    });
+    document.body.removeChild(tempDiv);
+
+    const tableImgHeight = (tableCanvas.height * imgWidth) / tableCanvas.width;
+    pdf.addPage();
+    pdf.setFontSize(16);
+    pdf.setTextColor(26, 26, 46);
+    pdf.text("Feature Analytics Report — Feature Table", 10, 10);
+    pdf.addImage(tableCanvas.toDataURL("image/jpeg", 0.85), "JPEG", 10, 20, imgWidth, tableImgHeight);
+
+    return pdf.output("datauristring").split(",")[1];
+  };
 
   return (
     <>
@@ -321,8 +553,9 @@ export default function FeatureGraphs() {
         </div>
       )}
 
-      <div
+       <div
         className="fg-page"
+        ref={graphsSectionRef}
         style={{
           width: isSidebarOpen ? "calc(100vw - 15vw)" : "100vw",
           marginLeft: isSidebarOpen ? "15vw" : "0",
@@ -342,7 +575,10 @@ export default function FeatureGraphs() {
             <h1 className="fg-header-title" style={{ fontSize: 26, fontWeight: 700, color: "#1a1a2e", margin: 0 }}>Feature Graphs</h1>
           </div> 
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <button style={{ background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            <button
+              onClick={() => setShowSendModal(true)}
+              style={{ background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+            >
               Send
             </button>
           </div>
@@ -456,6 +692,14 @@ export default function FeatureGraphs() {
         </div>
 
       </div>
+    {showSendModal && (
+      <SendReportModal
+        members={teamMembers}
+        onClose={() => setShowSendModal(false)}
+        senderName={name}
+        generatePDF={generatePDF}
+      />
+    )}
     </>
   );
 }
