@@ -29,6 +29,7 @@ function TeamDashboard() {
 
   const [activeState, setActiveState] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [isTeamDropupOpen, setIsTeamDropupOpen] = useState(false);
 
   const sidebarRef = useRef(null);
@@ -66,64 +67,56 @@ const [teamMembers, setTeamMembers] = useState([]);
     return (first + last).toUpperCase();
   };
 
-  useEffect(() => {
     const fetchStats = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/feedback/stats`);
-        const data = await res.json();
-
-        if (!res.ok) {
-          console.error(data.message || "Failed to fetch feedback stats");
-          return;
+        try {
+          const res = await fetch(`${API_BASE}/api/feedback/stats`);
+          const data = await res.json();
+          if (!res.ok) {
+            console.error(data.message || "Failed to fetch feedback stats");
+            return;
+          }
+          setStats(data);
+        } catch (err) {
+          console.error("Error fetching feedback stats:", err);
         }
+      };
 
-        setStats(data);
-      } catch (err) {
-        console.error("Error fetching feedback stats:", err);
-      }
-    };
-
-    fetchStats();
-  }, []);
+      useEffect(() => {
+        fetchStats();
+      }, []);
 
   
-  useEffect(() => {
-
   const fetchTeam = async () => {
-
     try {
-
       const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
       if (!storedUser) return;
-
-      const res = await fetch(
-        `${API_BASE}/api/admin/engineer-team/${storedUser.id}`
-      );
-
+      const res = await fetch(`${API_BASE}/api/admin/engineer-team/${storedUser.id}`);
       const team = await res.json();
-
       if (!team) return;
-
       setTeamName(team.teamName);
-
       const members = team.members.map(m => ({
         id: m._id,
         name: `${m.firstName} ${m.lastName}`,
         role: m.role,
         isLoggedIn: m._id === storedUser.id
       }));
-
       setTeamMembers(members);
-
     } catch (err) {
       console.error("Error loading team:", err);
     }
-
   };
 
-  fetchTeam();
+  useEffect(() => {
+    fetchStats();
+    fetchTeam();
+  }, []);
 
-}, []);
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    await Promise.all([fetchStats(), fetchTeam()]);
+    setIsSyncing(false);
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -1032,7 +1025,9 @@ const [teamMembers, setTeamMembers] = useState([]);
 
             <div className="nav-bar-items">
               <div className="calendar-format">📅 {formattedDate}</div>
-              <button className="sync-button">🔄 Sync</button>
+              <button className="sync-button" onClick={handleSync} disabled={isSyncing}>
+  {isSyncing ? "⏳ Syncing" : "🔄 Sync"}
+</button>
             </div>
           </div>
 
