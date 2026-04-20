@@ -10,6 +10,8 @@ exports.getFeedbackStats = async (req, res) => {
     const mentionsAgg = await Feedback.aggregate([
       { $group: { _id: null, totalMentions: { $sum: "$mentions" } } }
     ]);
+
+    
     const totalMentions = mentionsAgg[0]?.totalMentions || 0;
 
     return res.status(200).json({
