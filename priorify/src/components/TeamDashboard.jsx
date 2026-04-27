@@ -29,13 +29,16 @@ function TeamDashboard() {
 
   const [activeState, setActiveState] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [isTeamDropupOpen, setIsTeamDropupOpen] = useState(false);
 
   const sidebarRef = useRef(null);
   const hamburgerRef = useRef(null);
   const teamDropupRef = useRef(null);
   const [isMobileScreen, setIsMobileScreen] = useState(window.innerWidth < 786);
-
+  const [teamName, setTeamName] = useState("");
+const [teamMembers, setTeamMembers] = useState([]);
+  
   const graphData = [
     { name: "Bug", value: 230, color: "#3B82F6" },
     { name: "UI", value: 190, color: "#2e9e6b" },
@@ -64,25 +67,56 @@ function TeamDashboard() {
     return (first + last).toUpperCase();
   };
 
-  useEffect(() => {
     const fetchStats = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/feedback/stats`);
-        const data = await res.json();
-
-        if (!res.ok) {
-          console.error(data.message || "Failed to fetch feedback stats");
-          return;
+        try {
+          const res = await fetch(`${API_BASE}/api/feedback/stats`);
+          const data = await res.json();
+          if (!res.ok) {
+            console.error(data.message || "Failed to fetch feedback stats");
+            return;
+          }
+          setStats(data);
+        } catch (err) {
+          console.error("Error fetching feedback stats:", err);
         }
+      };
 
-        setStats(data);
-      } catch (err) {
-        console.error("Error fetching feedback stats:", err);
-      }
-    };
+      useEffect(() => {
+        fetchStats();
+      }, []);
 
+  
+  const fetchTeam = async () => {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
+      if (!storedUser) return;
+      const res = await fetch(`${API_BASE}/api/admin/engineer-team/${storedUser.id}`);
+      const team = await res.json();
+      if (!team) return;
+      setTeamName(team.teamName);
+      const members = team.members.map(m => ({
+        id: m._id,
+        name: `${m.firstName} ${m.lastName}`,
+        role: m.role,
+        isLoggedIn: m._id === storedUser.id
+      }));
+      setTeamMembers(members);
+    } catch (err) {
+      console.error("Error loading team:", err);
+    }
+  };
+
+  useEffect(() => {
     fetchStats();
+    fetchTeam();
   }, []);
+
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    await Promise.all([fetchStats(), fetchTeam()]);
+    setIsSyncing(false);
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -129,7 +163,8 @@ function TeamDashboard() {
     };
   }, [isMobileScreen, isSidebarOpen]);
 
-  const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
+  const storedUserString = localStorage.getItem("loggedInUser");
+  const storedUser = storedUserString ? JSON.parse(storedUserString) : null;
   const name = storedUser
     ? `${storedUser.firstName} ${storedUser.lastName}`
     : "JOE MAX";
@@ -143,41 +178,10 @@ function TeamDashboard() {
   });
 
   const navigate = useNavigate();
-  const role = "Requirement Engineer";
-  const TeamName = "Hope Project";
+  const role = storedUser?.role || "Engineer";
+  
 
-  const teamMembers = [
-    {
-      id: 1,
-      name: name,
-      role: "Team Leader",
-      isLoggedIn: true,
-    },
-    {
-      id: 2,
-      name: "Mirha Fatima",
-      role: "Requirement Engineer",
-      isLoggedIn: false,
-    },
-    {
-      id: 3,
-      name: "Alex Singh",
-      role: "Frontend Dev",
-      isLoggedIn: false,
-    },
-    {
-      id: 4,
-      name: "Rita Lin",
-      role: "QA Engineer",
-      isLoggedIn: false,
-    },
-    {
-      id: 5,
-      name: "Dev Kumar",
-      role: "Backend Dev",
-      isLoggedIn: false,
-    },
-  ];
+ 
 
   return (
     <>
@@ -926,11 +930,11 @@ function TeamDashboard() {
                       : "sidebar-btn middle-div-button"
                   }
                   onClick={() => {
-                    if (role === "Requirement Engineer") {
+                    if (role === "requirement_engineer") {
                         setActiveState("REPriority");
                         navigate("/REPriority");
                     } 
-                    else if (role === "Maintenance Engineer") {
+                    else if (role === "maintenance_engineer") {
                         setActiveState("MEPriority");
                         navigate("/MEPriority");
                     }
@@ -945,7 +949,7 @@ function TeamDashboard() {
               <hr className="hr-line" />
 
               <div className="lower-div">
-                <div className="lower-inner-div-1">{getInitials(TeamName)}</div>
+                <div className="lower-inner-div-1">{getInitials(teamName || "Team")}</div>
 
                 <div
                   className="lower-inner-div-2 team-dropup-wrapper"
@@ -956,7 +960,7 @@ function TeamDashboard() {
                     onClick={() => setIsTeamDropupOpen((prev) => !prev)}
                   >
                     <div className="team-title-wrap">
-                      <h4 className="lower-inner-div-2-heading">{TeamName}</h4>
+                      <h4 className="lower-inner-div-2-heading">{teamName}</h4>
                       <p className="team-member-count">
                         {teamMembers.length} members
                       </p>
@@ -972,7 +976,7 @@ function TeamDashboard() {
                   {isTeamDropupOpen && (
                     <div className="modern-team-menu">
                       <div className="team-menu-header">
-                        <p className="team-menu-title">{TeamName} team members</p>
+                        <p className="team-menu-title">{teamName} team members</p>
                       </div>
 
                       <div className="team-menu-list">
@@ -1021,7 +1025,9 @@ function TeamDashboard() {
 
             <div className="nav-bar-items">
               <div className="calendar-format">📅 {formattedDate}</div>
-              <button className="sync-button">🔄 Sync</button>
+              <button className="sync-button" onClick={handleSync} disabled={isSyncing}>
+  {isSyncing ? "⏳ Syncing" : "🔄 Sync"}
+</button>
             </div>
           </div>
 
@@ -1132,7 +1138,7 @@ function TeamDashboard() {
             <div className="center-right-div">
               <div className="name-logo">{getInitials(name)}</div>
               <h3 className="center-div-heading">{name}</h3>
-              <p className="center-div-text1">{TeamName}</p>
+              <p className="center-div-text1">{teamName}</p>
               <p className="center-div-text2">{role}</p>
             </div>
           </div>

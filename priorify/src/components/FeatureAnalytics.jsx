@@ -1,19 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import hamburger from '../assets/hamburger.png'
 import logo from '../assets/logo.png'
 
-// --- Mock Data ---
-const initialFeatures = [
-  { id: 1, name: "Dark Mode Support", mentions: 142, priority: "High", sentiment: "Positive", sprint: true, rank: 1, date: "10 Mar 2021", score: 85 },
-  { id: 2, name: "Slow Loading Times", mentions: 134, priority: "High", sentiment: "Negative", sprint: true, rank: 2, date: "10 Mar 2021", score: 20 },
-  { id: 3, name: "Notification Overload", mentions: 112, priority: "High", sentiment: "Negative", sprint: true, rank: 3, date: "09 Mar 2021", score: 35 },
-  { id: 4, name: "Offline Access", mentions: 98, priority: "High", sentiment: "Neutral", sprint: false, rank: 4, date: "08 Mar 2021", score: 55 },
-  { id: 5, name: "Team Collaboration", mentions: 89, priority: "Medium", sentiment: "Positive", sprint: false, rank: 5, date: "08 Mar 2021", score: 78 },
-  { id: 6, name: "Calendar Integration", mentions: 76, priority: "Medium", sentiment: "Positive", sprint: false, rank: 6, date: "07 Mar 2021", score: 72 },
-  { id: 7, name: "Export to PDF", mentions: 55, priority: "Medium", sentiment: "Neutral", sprint: false, rank: 7, date: "06 Mar 2021", score: 50 },
-  { id: 8, name: "Custom Themes", mentions: 43, priority: "Low", sentiment: "Positive", sprint: false, rank: 8, date: "10 Mar 2021", score: 44 },
-];
+import initialFeatures from '../data/featuresData';
 
 const priorityStyles = {
   High: { bg: "#fff5f5", text: "#e53e3e", dot: "#e53e3e" },
@@ -116,6 +106,9 @@ export default function FeatureAnalytics() {
   const [sentimentFilter, setSentimentFilter] = useState("All");
   const [priorityFilter, setPriorityFilter] = useState("Low");
   const [search, setSearch] = useState("");
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const tableRef = useRef(null);
 
   const filteredFeatures = initialFeatures.filter((f) => {
     const matchesPriority = priorityFilter === "All" || f.priority === priorityFilter;
@@ -126,6 +119,22 @@ export default function FeatureAnalytics() {
 
   const sprintItems = initialFeatures.filter((f) => f.sprint);
   const backlogItems = initialFeatures.filter((f) => !f.sprint);
+useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    if (!storedUser) return;
+    fetch(`http://localhost:5000/api/admin/teams/${storedUser.id}`)
+      .then(res => res.json())
+      .then(data => {
+        const members = [];
+        data.forEach(team => {
+          team.members.forEach(m => {
+            if (!members.find(x => x._id === m._id)) members.push(m);
+          });
+        });
+        setTeamMembers(members);
+      })
+      .catch(err => console.error(err));
+  }, []);
 
   const navigate = useNavigate();
   const getInitials = (name) => {
@@ -142,7 +151,27 @@ export default function FeatureAnalytics() {
 
   const [activeState,setActiveState] = useState("priority")
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
+  const generatePDF = async () => {
+    const { default: html2canvas } = await import("html2canvas");
+    const { default: jsPDF } = await import("jspdf");
+    const element = tableRef.current;
+    if (!element) return null;
+    const canvas = await html2canvas(element, {
+      scale: 1.5,
+      useCORS: true,
+      backgroundColor: "#f7f9fc",
+      logging: false,
+    });
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const imgWidth = pageWidth - 20;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    pdf.setFontSize(16);
+    pdf.setTextColor(26, 26, 46);
+    pdf.text("Feature Requests Report", 10, 10);
+    pdf.addImage(canvas.toDataURL("image/jpeg", 0.85), "JPEG", 10, 20, imgWidth, imgHeight);
+    return pdf.output("datauristring").split(",")[1];
+  };
   return (
   <div>
     <style>{`
@@ -249,6 +278,8 @@ export default function FeatureAnalytics() {
                    onClick={() => { setActiveState("priority"); navigate("/priority"); }}>Priority</button>
                 <button style={activeState === "graph" ? activeButton : MiddleDivButton}
                    onClick={() => { setActiveState("graph"); navigate("/graph"); }}>Graph</button>
+                <button className={activeState === "Team" ? activeButton : MiddleDivButton}
+                  onClick={() => {setActiveState("Team"); navigate("/createteam");}}>Team</button>
             </div>
         </div>
 
@@ -300,6 +331,12 @@ export default function FeatureAnalytics() {
           <button style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "8px 12px", fontSize: "13px", color: "#4a5568", cursor: "pointer", whiteSpace: "nowrap" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4299e1" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             13 March 2021
+          </button>
+          <button
+            onClick={() => setShowSendModal(true)}
+            style={{ display: "flex", alignItems: "center", gap: "8px", background: "#2563eb", border: "none", borderRadius: "8px", padding: "8px 16px", fontSize: "13px", color: "#fff", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}
+          >
+            Send Report
           </button>
         </div>
       </div>
@@ -365,14 +402,13 @@ export default function FeatureAnalytics() {
       </div>
 
       {/* --- FEATURE REQUESTS TABLE --- */}
-      <div style={{ background: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", marginBottom: "24px", overflowX: "auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
+      
+       <div ref={tableRef} style={{ background: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", marginBottom: "24px", overflowX: "auto" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <h2 style={{ fontSize: "16px", fontWeight: "700", color: "#2d3748", margin: 0 }}>Feature Requests</h2>
             <span style={{ background: "#edf2f7", color: "#718096", fontSize: "11px", fontWeight: "600", padding: "2px 8px", borderRadius: "10px" }}>{filteredFeatures.length} features</span>
           </div>
           <span style={{ fontSize: "12px", color: "#cbd5e0" }}>Click Edit to manually set priority</span>
-        </div>
 
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "480px" }}>
           <thead>
@@ -467,6 +503,14 @@ export default function FeatureAnalytics() {
         </div>
       </div>
     </div>
+   {showSendModal && (
+        <SendReportModal
+          members={teamMembers}
+          onClose={() => setShowSendModal(false)}
+          senderName={name}
+          generatePDF={generatePDF}
+        />
+      )}
   </div>
   );
 }

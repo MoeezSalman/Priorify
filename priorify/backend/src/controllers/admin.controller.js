@@ -2,50 +2,91 @@ const bcrypt = require("bcryptjs");
 const Admin = require("../models/Admin");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const Engineer = require("../models/Engineer");
+
 exports.createAdmin = async (req, res) => {
   try {
-    const { firstName, lastName, username, password } = req.body;
+
+    const { firstName, lastName, username, password, role, subrole } = req.body;
 
     if (!username || username.trim().length < 3) {
       return res.status(400).json({ message: "Username must be at least 3 chars." });
     }
+
     if (!password || password.length < 8) {
       return res.status(400).json({ message: "Password must be at least 8 chars." });
     }
-    if (!firstName || !firstName.trim()) {
-      return res.status(400).json({ message: "First name is required." });
-    }
+    const existingAdmin = await Admin.findOne({ username: username.trim() });
+const existingEngineer = await Engineer.findOne({ username: username.trim() });
 
-    if (!lastName || !lastName.trim()) {
-      return res.status(400).json({ message: "Last name is required." });
-    }
-
-    const existing = await Admin.findOne({ username: username.trim() });
-    if (existing) {
-      return res.status(409).json({ message: "Username already exists." });
-    }
-
+if (existingAdmin || existingEngineer) {
+  return res.status(409).json({ message: "Username already exists." });
+}
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const admin = await Admin.create({
-    firstName: firstName.trim(),
-    lastName: lastName.trim(),
-    username: username.trim(),
-    passwordHash
-    });
+    // PROJECT MANAGER -> ADMIN TABLE
+    if (role === "pm") {
 
-   return res.status(201).json({
-    message: "Admin created",
-    admin: {
-      id: admin._id,
-      firstName: admin.firstName,
-      lastName: admin.lastName,
-      username: admin.username
+      const existing = await Admin.findOne({ username: username.trim() });
+
+      
+
+      const admin = await Admin.create({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        username: username.trim(),
+        passwordHash,
+        role: "admin"
+      });
+
+      return res.status(201).json({
+      message: "Admin created",
+      user: {
+        id: admin._id,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        username: admin.username,
+        role: "pm"
+      }
+});
+
     }
-    });
+
+    // TEAM MEMBER -> ENGINEER TABLE
+    if (role === "tm") {
+
+      const existing = await Engineer.findOne({ username: username.trim() });
+
+      
+
+      const engineer = await Engineer.create({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        username: username.trim(),
+        role: subrole,
+        passwordHash,
+        appointed: false,
+        appointedBy: null
+      });
+
+      return res.status(201).json({
+        message: "Engineer created",
+        user: {
+          id: engineer._id,
+          firstName: engineer.firstName,
+          lastName: engineer.lastName,
+          username: engineer.username,
+          role: engineer.role
+        }
+      });
+
+    }
+
   } catch (err) {
+
     console.error(err);
     return res.status(500).json({ message: "Server error" });
+
   }
 };
 
@@ -57,26 +98,37 @@ exports.loginAdmin = async (req, res) => {
       return res.status(400).json({ message: "Username and password are required." });
     }
 
-    const admin = await Admin.findOne({ username: username.trim() });
-    if (!admin) {
+    // Check admin first
+    let user = await Admin.findOne({ username: username.trim() });
+    let role = "pm";
+
+    if (!user) {
+      // If not admin, check engineer
+      user = await Engineer.findOne({ username: username.trim() });
+      role = user?.role;
+    }
+
+    if (!user) {
       return res.status(401).json({ message: "Invalid credentials." });
     }
 
-    const ok = await bcrypt.compare(password, admin.passwordHash);
+    const ok = await bcrypt.compare(password, user.passwordHash);
+
     if (!ok) {
       return res.status(401).json({ message: "Invalid credentials." });
     }
 
-    // For now, just return success (later you can add JWT token)
     return res.status(200).json({
       message: "Login successful",
-      admin: {
-        id: admin._id,
-        firstName: admin.firstName,
-        lastName: admin.lastName,
-        username: admin.username,
-      },
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
+        role
+      }
     });
+
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Server error" });
@@ -101,8 +153,15 @@ exports.forgotPassword = async (req, res) => {
       return res.status(400).json({ message: "Email is required." });
     }
 
-    const admin = await Admin.findOne({ username: username.trim() });
-    if (!admin) {
+    let user = await Admin.findOne({ username: username.trim() });
+    let table = "admin";
+
+    if (!user) {
+      user = await Engineer.findOne({ username: username.trim() });
+      table = "engineer";
+    }
+
+    if (!user) {
       return res.status(404).json({ message: "No user found with this email." });
     }
 
@@ -110,13 +169,13 @@ exports.forgotPassword = async (req, res) => {
 
     const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
 
-    admin.resetOtpHash = otpHash;
-    admin.resetOtpExpires = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
-    await admin.save();
+    user.resetOtpHash = otpHash;
+    user.resetOtpExpires = new Date(Date.now() + 2 * 60 * 1000);
+    await user.save();
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: admin.username,
+      to: user.username,
       subject: "Priorify Reset OTP",
       text: `Your OTP is: ${otp}\nThis OTP expires in 2 minutes.`,
     });
@@ -136,19 +195,24 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "Email and OTP are required." });
     }
 
-    const admin = await Admin.findOne({ username: username.trim() });
-    if (!admin) return res.status(404).json({ message: "User not found." });
+    let user = await Admin.findOne({ username: username.trim() });
 
-    if (!admin.resetOtpHash || !admin.resetOtpExpires) {
+    if (!user) {
+      user = await Engineer.findOne({ username: username.trim() });
+    }
+
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    if (!user.resetOtpHash || !user.resetOtpExpires) {
       return res.status(400).json({ message: "OTP not requested." });
     }
 
-    if (admin.resetOtpExpires.getTime() < Date.now()) {
+    if (user.resetOtpExpires.getTime() < Date.now()) {
       return res.status(400).json({ message: "OTP expired." });
     }
 
     const otpHash = crypto.createHash("sha256").update(String(otp)).digest("hex");
-    if (otpHash !== admin.resetOtpHash) {
+    if (otpHash !== user.resetOtpHash) {
       return res.status(400).json({ message: "Invalid OTP." });
     }
 
@@ -171,30 +235,293 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: "Password must be at least 8 characters." });
     }
 
-    const admin = await Admin.findOne({ username: username.trim() });
-    if (!admin) return res.status(404).json({ message: "User not found." });
+    let user = await Admin.findOne({ username: username.trim() });
 
-    if (!admin.resetOtpHash || !admin.resetOtpExpires) {
+    if (!user) {
+      user = await Engineer.findOne({ username: username.trim() });
+    }
+
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    if (!user.resetOtpHash || !user.resetOtpExpires) {
       return res.status(400).json({ message: "OTP not requested." });
     }
 
-    if (admin.resetOtpExpires.getTime() < Date.now()) {
+    if (user.resetOtpExpires.getTime() < Date.now()) {
       return res.status(400).json({ message: "OTP expired." });
     }
 
     const otpHash = crypto.createHash("sha256").update(String(otp)).digest("hex");
-    if (otpHash !== admin.resetOtpHash) {
+    if (otpHash !== user.resetOtpHash) {
       return res.status(400).json({ message: "Invalid OTP." });
     }
 
-    admin.passwordHash = await bcrypt.hash(newPassword, 10);
-    admin.resetOtpHash = null;
-    admin.resetOtpExpires = null;
-    await admin.save();
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    user.resetOtpHash = null;
+    user.resetOtpExpires = null;
+    await user.save();
 
     return res.status(200).json({ message: "Password updated successfully." });
   } catch (err) {
     console.error("resetPassword error:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+exports.createTeam = async (req, res) => {
+  try {
+    const { adminId, teamName, focus, members } = req.body;
+
+    const admin = await Admin.findById(adminId);
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    // Ensure team array exists
+    if (!admin.team) {
+      admin.team = [];
+    }
+
+    admin.team.push({
+      teamName,
+      focus,
+      members
+    });
+
+    await admin.save();
+
+    // Update engineers
+    await Engineer.updateMany(
+      { _id: { $in: members } },
+      {
+        $set: {
+          appointed: true,
+          appointedBy: adminId
+        }
+      }
+    );
+
+    res.status(200).json({
+      message: "Team created successfully"
+    });
+
+  } catch (err) {
+    console.error("createTeam error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
+exports.getEngineers = async (req, res) => {
+
+  const engineers = await Engineer.find({
+    appointed: false
+  });
+
+  res.json(engineers);
+};
+
+exports.getTeams = async (req, res) => {
+  try {
+
+    const admin = await Admin.findById(req.params.adminId)
+      .populate("team.members");
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    res.json(admin.team);
+
+  } catch (err) {
+
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+
+  }
+};
+
+exports.updateTeam = async (req, res) => {
+
+  const { adminId, teamName, members } = req.body;
+  const { teamId } = req.params;
+
+  try {
+
+    const admin = await Admin.findById(adminId);
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    const team = admin.team.id(teamId);
+
+    if (!team) {
+      return res.status(404).json({ message: "Team not found" });
+    }
+
+    // previous members
+    const oldMembers = team.members.map(m => m.toString());
+
+    // new members
+    const newMembers = members;
+
+    // detect removed members
+    const removedMembers = oldMembers.filter(
+      id => !newMembers.includes(id)
+    );
+
+    // detect added members
+    const addedMembers = newMembers.filter(
+      id => !oldMembers.includes(id)
+    );
+
+    // update team
+    team.teamName = teamName;
+    team.members = newMembers;
+
+    // REMOVE members from team
+    if (removedMembers.length > 0) {
+      await Engineer.updateMany(
+        { _id: { $in: removedMembers } },
+        {
+          $set: {
+            appointed: false,
+            appointedBy: null
+          }
+        }
+      );
+    }
+
+    // ADD members to team
+    if (addedMembers.length > 0) {
+      await Engineer.updateMany(
+        { _id: { $in: addedMembers } },
+        {
+          $set: {
+            appointed: true,
+            appointedBy: adminId
+          }
+        }
+      );
+    }
+
+    await admin.save();
+
+    res.json({ message: "Team updated successfully" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+
+};
+
+exports.deleteTeam = async (req, res) => {
+  try {
+    const { adminId } = req.body;
+    const { teamId } = req.params;
+
+    const admin = await Admin.findById(adminId);
+
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    const team = admin.team.id(teamId);
+
+    if (!team) {
+      return res.status(404).json({ message: "Team not found" });
+    }
+
+    const memberIds = team.members;
+
+    admin.team.pull(teamId);
+
+    await Engineer.updateMany(
+      { _id: { $in: memberIds } },
+      { $set: { appointed: false, appointedBy: null } }
+    );
+
+    await admin.save();
+
+    res.json({ message: "Team deleted successfully" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+exports.getEngineerTeam = async (req, res) => {
+  try {
+
+    const engineerId = req.params.engineerId;
+
+    const admin = await Admin.findOne({
+      "team.members": engineerId
+    }).populate("team.members");
+
+    if (!admin) {
+      return res.json(null);
+    }
+
+    const team = admin.team.find(t =>
+      t.members.some(m => m._id.toString() === engineerId)
+    );
+
+    res.json(team);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+exports.sendReportEmail = async (req, res) => {
+  try {
+    const { recipientEmail, recipientName, senderName, pdfBase64 } = req.body;
+
+    if (!recipientEmail) {
+      return res.status(400).json({ message: "Recipient email is required." });
+    }
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: recipientEmail,
+      subject: `Feature Analytics Report from ${senderName}`,
+      html: `
+        <div style="font-family: system-ui, sans-serif; padding: 24px;">
+          <h2 style="color: #1a1a2e;">Feature Analytics Report</h2>
+          <p>Hi <strong>${recipientName}</strong>,</p>
+          <p><strong>${senderName}</strong> has shared the latest feature analytics report with you.</p>
+          <p style="color: #9ca3af; font-size: 12px;">Please find the PDF report attached.</p>
+        </div>
+      `,
+    };
+
+    // Attach PDF if provided
+    if (pdfBase64) {
+      mailOptions.attachments = [
+        {
+          filename: "FeatureAnalyticsReport.pdf",
+          content: pdfBase64,
+          encoding: "base64",
+          contentType: "application/pdf",
+        },
+      ];
+    }
+
+    await transporter.sendMail(mailOptions);
+    return res.status(200).json({ message: "Report sent successfully." });
+
+  } catch (err) {
+    console.error("sendReportEmail error:", err);
     return res.status(500).json({ message: "Server error" });
   }
 };

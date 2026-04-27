@@ -29,7 +29,7 @@ function Dashboard() {
 
   const [activeState, setActiveState] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
+  const [isSyncing, setIsSyncing] = useState(false);
   const sidebarRef = useRef(null);
   const hamburgerRef = useRef(null);
   const [isMobileScreen, setIsMobileScreen] = useState(window.innerWidth < 786);
@@ -62,25 +62,26 @@ function Dashboard() {
     return (first + last).toUpperCase();
   };
 
-  useEffect(() => {
     const fetchStats = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/feedback/stats`);
-        const data = await res.json();
-
-        if (!res.ok) {
-          console.error(data.message || "Failed to fetch feedback stats");
-          return;
+        try {
+          setIsSyncing(true);
+          const res = await fetch(`${API_BASE}/api/feedback/stats`);
+          const data = await res.json();
+          if (!res.ok) {
+            console.error(data.message || "Failed to fetch feedback stats");
+            return;
+          }
+          setStats(data);
+        } catch (err) {
+          console.error("Error fetching feedback stats:", err);
+        } finally {
+          setIsSyncing(false);
         }
+      };
 
-        setStats(data);
-      } catch (err) {
-        console.error("Error fetching feedback stats:", err);
-      }
-    };
-
-    fetchStats();
-  }, []);
+      useEffect(() => {
+        fetchStats();
+      }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -677,6 +678,20 @@ function Dashboard() {
                 >
                   Graph
                 </button>
+
+                <button
+                  className={
+                    activeState === "Team"
+                      ? "sidebar-btn active-button"
+                      : "sidebar-btn middle-div-button"
+                  }
+                  onClick={() => {
+                    setActiveState("Team");
+                    navigate("/createteam");
+                  }}
+                >
+                  Team
+                </button>
               </div>
             </div>
 
@@ -710,7 +725,9 @@ function Dashboard() {
 
             <div className="nav-bar-items">
               <div className="calendar-format">📅 {formattedDate}</div>
-              <button className="sync-button">🔄 Sync</button>
+              <button className="sync-button" onClick={fetchStats} disabled={isSyncing}>
+              {isSyncing ? "⏳ Syncing" : "🔄 Sync"}
+              </button>
             </div>
           </div>
 
