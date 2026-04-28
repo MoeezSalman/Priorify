@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import hamburger from '../assets/hamburger.png'
 import logo from '../assets/logo.png'
 
-import initialFeatures from '../data/featuresData';
 
 const priorityStyles = {
   High: { bg: "#fff5f5", text: "#e53e3e", dot: "#e53e3e" },
@@ -104,22 +103,38 @@ const hamburgerBtn = {
 
 export default function FeatureAnalytics() {
   const [sentimentFilter, setSentimentFilter] = useState("All");
-  const [priorityFilter, setPriorityFilter] = useState("Low");
+  const [priorityFilter, setPriorityFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [showSendModal, setShowSendModal] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [editPriority, setEditPriority] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
   const [teamMembers, setTeamMembers] = useState([]);
   const tableRef = useRef(null);
 
-  const filteredFeatures = initialFeatures.filter((f) => {
+  // --- Product Backlog state ---
+  const [backlogItems, setBacklogItems] = useState([]);
+  const [backlogLoading, setBacklogLoading] = useState(true);
+  const [backlogError, setBacklogError] = useState(null);
+
+  // --- Sprint Backlog state ---
+  const [sprintItems, setSprintItems] = useState([]);
+  const [sprintLoading, setSprintLoading] = useState(true);
+  const [sprintError, setSprintError] = useState(null);
+
+  // --- All Features table state ---
+  const [allFeatures, setAllFeatures] = useState([]);
+  const [featuresLoading, setFeaturesLoading] = useState(true);
+  const [featuresError, setFeaturesError] = useState(null);
+
+  const filteredFeatures = allFeatures.filter((f) => {
     const matchesPriority = priorityFilter === "All" || f.priority === priorityFilter;
     const matchesSentiment = sentimentFilter === "All" || f.sentiment === sentimentFilter;
     const matchesSearch = f.name.toLowerCase().includes(search.toLowerCase());
     return matchesPriority && matchesSentiment && matchesSearch;
   });
 
-  const sprintItems = initialFeatures.filter((f) => f.sprint);
-  const backlogItems = initialFeatures.filter((f) => !f.sprint);
-useEffect(() => {
+  useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
     if (!storedUser) return;
     fetch(`http://localhost:5000/api/admin/teams/${storedUser.id}`)
@@ -134,6 +149,94 @@ useEffect(() => {
         setTeamMembers(members);
       })
       .catch(err => console.error(err));
+  }, []);
+
+  // --- Fetch all features for table from /api/sentiment ---
+  useEffect(() => {
+    setFeaturesLoading(true);
+    setFeaturesError(null);
+    fetch("http://localhost:5000/api/sentiment")
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to fetch features");
+        return res.json();
+      })
+      .then(data => {
+        const raw = Array.isArray(data) ? data : (data.results || []);
+        const items = raw.map((item) => ({
+          ...item,
+          id: item._id,
+          name: item.feedbackText || item.name || "Untitled",
+          mentions: item.mentions ?? 0,
+          priority: item.priority || "Low",
+          score: item.score ?? 0,
+          date: item.createdAt
+            ? new Date(item.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+            : "—",
+        }));
+        setAllFeatures(items);
+        setFeaturesLoading(false);
+      })
+      .catch(err => {
+        console.error("Features fetch error:", err);
+        setFeaturesError("Failed to load features.");
+        setFeaturesLoading(false);
+      });
+  }, []);
+
+  // --- Fetch Product Backlog from /api/sentiment/negative ---
+  useEffect(() => {
+    setBacklogLoading(true);
+    setBacklogError(null);
+    fetch("http://localhost:5000/api/sentiment/negative")
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to fetch backlog");
+        return res.json();
+      })
+      .then(data => {
+        const items = (data.results || []).map((item, index) => ({
+          ...item,
+          rank: index + 1,
+          name: item.feedbackText || "Untitled",
+          mentions: item.mentions ?? 0,
+          priority: item.priority || "Low",
+        }));
+        setBacklogItems(items);
+        setBacklogLoading(false);
+      })
+      .catch(err => {
+        console.error("Product Backlog fetch error:", err);
+        setBacklogError("Failed to load backlog.");
+        setBacklogLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    setSprintLoading(true);
+    setSprintError(null);
+    fetch("http://localhost:5000/api/sentiment/negative")
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to fetch sprint backlog");
+        return res.json();
+      })
+      .then(data => {
+        const highPriority = (data.results || [])
+          .filter(item => item.priority === "High")
+          .slice(0, 3)
+          .map((item, index) => ({
+            ...item,
+            rank: index + 1,
+            name: item.feedbackText || "Untitled",
+            mentions: item.mentions ?? 0,
+            priority: "High",
+          }));
+        setSprintItems(highPriority);
+        setSprintLoading(false);
+      })
+      .catch(err => {
+        console.error("Sprint Backlog fetch error:", err);
+        setSprintError("Failed to load sprint backlog.");
+        setSprintLoading(false);
+      });
   }, []);
 
   const navigate = useNavigate();
@@ -172,6 +275,25 @@ useEffect(() => {
     pdf.addImage(canvas.toDataURL("image/jpeg", 0.85), "JPEG", 10, 20, imgWidth, imgHeight);
     return pdf.output("datauristring").split(",")[1];
   };
+  const handleEditSave = async () => {
+    if (!editItem) return;
+    setEditSaving(true);
+    try {
+      await fetch(`http://localhost:5000/api/sentiment/${editItem._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priority: editPriority }),
+      });
+      setAllFeatures(prev =>
+        prev.map(f => f._id === editItem._id ? { ...f, priority: editPriority } : f)
+      );
+      setEditItem(null);
+    } catch (err) {
+      console.error("Edit save error:", err);
+    }
+    setEditSaving(false);
+  };
+
   return (
   <div>
     <style>{`
@@ -189,6 +311,8 @@ useEffect(() => {
         color: #4a5568 !important;
         background-color: #fff !important;
       }
+      ::-webkit-scrollbar { display: none; }
+      * { scrollbar-width: none; ms-overflow-style: none; }
       body:has(.analytics-page) select option {
         background-color: #fff !important;
         color: #4a5568 !important;
@@ -402,76 +526,115 @@ useEffect(() => {
       </div>
 
       {/* --- FEATURE REQUESTS TABLE --- */}
-      
-       <div ref={tableRef} style={{ background: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", marginBottom: "24px", overflowX: "auto" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <h2 style={{ fontSize: "16px", fontWeight: "700", color: "#2d3748", margin: 0 }}>Feature Requests</h2>
-            <span style={{ background: "#edf2f7", color: "#718096", fontSize: "11px", fontWeight: "600", padding: "2px 8px", borderRadius: "10px" }}>{filteredFeatures.length} features</span>
-          </div>
-          <span style={{ fontSize: "12px", color: "#cbd5e0" }}>Click Edit to manually set priority</span>
 
-        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "480px" }}>
-          <thead>
-            <tr style={{ textAlign: "left", borderBottom: "1px solid #edf2f7" }}>
-              <th style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>FEATURE NAME</th>
-              <th style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>MENTIONS</th>
-              <th className="fa-col-score" style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>SENTIMENT SCORE</th>
-              <th style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>PRIORITY</th>
-              <th className="fa-col-date" style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>DATE ADDED</th>
-              <th className="fa-col-action" style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>ACTION</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredFeatures.map((f) => (
-              <tr key={f.id} style={{ borderBottom: "1px solid #f7fafc" }}>
-                <td className="fa-table-cell fa-table-name" style={{ padding: "16px 0", fontSize: "14px", color: "#4a5568", fontWeight: "500" }}>
-                  <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: priorityStyles[f.priority].dot, marginRight: "10px", flexShrink: 0 }} />
-                  {f.name}
-                </td>
-                <td className="fa-table-cell" style={{ fontSize: "14px", color: "#4299e1", fontWeight: "700", padding: "16px 8px 16px 0" }}>{f.mentions}</td>
-                <td className="fa-col-score fa-table-cell" style={{ padding: "16px 8px 16px 0" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ width: "80px", height: "6px", background: "#edf2f7", borderRadius: "3px", overflow: "hidden" }}>
-                      <div style={{ width: `${f.score}%`, height: "100%", background: "#ed8936" }} />
-                    </div>
-                    <span style={{ fontSize: "13px", color: "#ed8936", fontWeight: "700" }}>+{f.score}</span>
-                  </div>
-                </td>
-                <td className="fa-table-cell" style={{ padding: "16px 8px 16px 0" }}>
-                  <span style={{ background: priorityStyles[f.priority].bg, color: priorityStyles[f.priority].text, padding: "4px 12px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", whiteSpace: "nowrap" }}>
-                    {f.priority}
-                  </span>
-                </td>
-                <td className="fa-col-date fa-table-cell" style={{ fontSize: "13px", color: "#718096", padding: "16px 8px 16px 0", whiteSpace: "nowrap" }}>{f.date}</td>
-                <td className="fa-col-action fa-table-cell" style={{ fontSize: "13px", color: "#a0aec0", padding: "16px 0" }}>
-                  <span style={{ marginRight: "8px" }}>—</span>
-                  <button style={{ background: "none", border: "none", color: "#4299e1", cursor: "pointer", padding: 0, fontSize: "13px", fontWeight: "500" }}>Edit</button>
-                </td>
+      <div ref={tableRef} style={{ background: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", marginBottom: "24px", overflowX: "auto", maxHeight: "480px", overflowY: "auto" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <h2 style={{ fontSize: "16px", fontWeight: "700", color: "#2d3748", margin: 0 }}>Feature Requests</h2>
+          <span style={{ background: "#edf2f7", color: "#718096", fontSize: "11px", fontWeight: "600", padding: "2px 8px", borderRadius: "10px" }}>
+            {featuresLoading ? "..." : `${filteredFeatures.length} features`}
+          </span>
+        </div>
+        <span style={{ fontSize: "12px", color: "#cbd5e0" }}>Click Edit to manually set priority</span>
+
+        {featuresLoading && (
+          <div style={{ textAlign: "center", padding: "32px 0", color: "#a0aec0", fontSize: "13px" }}>Loading features...</div>
+        )}
+        {featuresError && (
+          <div style={{ textAlign: "center", padding: "32px 0", color: "#e53e3e", fontSize: "13px" }}>{featuresError}</div>
+        )}
+        {!featuresLoading && !featuresError && (
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "480px" }}>
+            <thead>
+              <tr style={{ textAlign: "left", borderBottom: "1px solid #edf2f7" }}>
+                <th style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>FEATURE NAME</th>
+                <th style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>MENTIONS</th>
+                <th className="fa-col-score" style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>SENTIMENT SCORE</th>
+                <th style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>PRIORITY</th>
+                <th className="fa-col-date" style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>DATE ADDED</th>
+                <th className="fa-col-action" style={{ paddingBottom: "12px", fontSize: "11px", color: "#cbd5e0", fontWeight: "700", letterSpacing: "0.05em" }}>ACTION</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredFeatures.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: "center", padding: "32px 0", color: "#a0aec0", fontSize: "13px" }}>
+                    No features match the selected filters.
+                  </td>
+                </tr>
+              ) : (
+                filteredFeatures.map((f) => (
+                  <tr key={f._id || f.id} style={{ borderBottom: "1px solid #f7fafc" }}>
+                    <td className="fa-table-cell fa-table-name" style={{ padding: "16px 0", fontSize: "14px", color: "#4a5568", fontWeight: "500" }}>
+                      <span style={{ display: "inline-block", width: "8px", height: "8px", borderRadius: "50%", background: priorityStyles[f.priority]?.dot ?? "#ccc", marginRight: "10px", flexShrink: 0 }} />
+                      {f.name}
+                    </td>
+                    <td className="fa-table-cell" style={{ fontSize: "14px", color: "#4299e1", fontWeight: "700", padding: "16px 8px 16px 0" }}>{f.mentions}</td>
+                    <td className="fa-col-score fa-table-cell" style={{ padding: "16px 8px 16px 0" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <div style={{ width: "80px", height: "6px", background: "#edf2f7", borderRadius: "3px", overflow: "hidden" }}>
+                          <div style={{ width: `${Math.min(f.score, 100)}%`, height: "100%", background: "#ed8936" }} />
+                        </div>
+                        <span style={{ fontSize: "13px", color: "#ed8936", fontWeight: "700" }}>+{f.score}</span>
+                      </div>
+                    </td>
+                    <td className="fa-table-cell" style={{ padding: "16px 8px 16px 0" }}>
+                      <span style={{ background: priorityStyles[f.priority]?.bg ?? "#edf2f7", color: priorityStyles[f.priority]?.text ?? "#718096", padding: "4px 12px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", whiteSpace: "nowrap" }}>
+                        {f.priority}
+                      </span>
+                    </td>
+                    <td className="fa-col-date fa-table-cell" style={{ fontSize: "13px", color: "#718096", padding: "16px 8px 16px 0", whiteSpace: "nowrap" }}>{f.date}</td>
+                    <td className="fa-col-action fa-table-cell" style={{ fontSize: "13px", color: "#a0aec0", padding: "16px 0" }}>
+                      <span style={{ marginRight: "8px" }}>—</span>
+                      <button onClick={() => { setEditItem(f); setEditPriority(f.priority); }} style={{ background: "none", border: "none", color: "#4299e1", cursor: "pointer", padding: 0, fontSize: "13px", fontWeight: "500" }}>Edit</button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* --- BOTTOM PANELS --- */}
       <div className="fa-bottom-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-        {/* Sprint Backlog */}
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+        {/* Sprint Backlog — top 3 High priority from /api/sentiment/negative */}
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", maxHeight: "480px", overflowY: "auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <h2 style={{ fontSize: "15px", fontWeight: "700", color: "#2d3748", margin: 0 }}>Sprint Backlog</h2>
               <span style={{ background: "#ebf8ff", color: "#3182ce", fontSize: "10px", fontWeight: "800", padding: "2px 8px", borderRadius: "10px", whiteSpace: "nowrap" }}>ACTIVE SPRINT</span>
             </div>
-            <span style={{ fontSize: "12px", color: "#cbd5e0" }}>Top 3</span>
+            <span style={{ fontSize: "12px", color: "#cbd5e0" }}>
+              {sprintLoading ? "Loading..." : "Top 3"}
+            </span>
           </div>
-          {sprintItems.map(item => (
-            <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #f7fafc" }}>
+
+          {sprintLoading && (
+            <div style={{ textAlign: "center", padding: "24px 0", color: "#a0aec0", fontSize: "13px" }}>
+              Loading sprint backlog...
+            </div>
+          )}
+
+          {sprintError && (
+            <div style={{ textAlign: "center", padding: "24px 0", color: "#e53e3e", fontSize: "13px" }}>
+              {sprintError}
+            </div>
+          )}
+
+          {!sprintLoading && !sprintError && sprintItems.length === 0 && (
+            <div style={{ textAlign: "center", padding: "24px 0", color: "#a0aec0", fontSize: "13px" }}>
+              No high priority items found.
+            </div>
+          )}
+
+          {!sprintLoading && !sprintError && sprintItems.map(item => (
+            <div key={item._id || item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #f7fafc" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#4299e1", color: "#fff", fontSize: "12px", fontWeight: "700", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{item.rank}</span>
                 <div>
                   <div style={{ fontSize: "14px", fontWeight: "600", color: "#2d3748" }}>{item.name}</div>
                   <div style={{ fontSize: "12px", color: "#a0aec0" }}>{item.mentions} mentions <span style={{ margin: "0 4px" }}>•</span>
-                    <span style={{ color: priorityStyles[item.priority].text }}>{item.priority}</span>
+                    <span style={{ color: priorityStyles[item.priority]?.text ?? "#718096" }}>{item.priority}</span>
                   </div>
                 </div>
               </div>
@@ -480,20 +643,41 @@ useEffect(() => {
           ))}
         </div>
 
-        {/* Product Backlog */}
-        <div style={{ background: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+        {/* Product Backlog — fetched from /api/sentiment/negative */}
+        <div style={{ background: "#fff", borderRadius: "12px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", maxHeight: "480px", overflowY: "auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "8px" }}>
             <h2 style={{ fontSize: "15px", fontWeight: "700", color: "#2d3748", margin: 0 }}>Product Backlog</h2>
-            <span style={{ color: "#cbd5e0", fontSize: "12px" }}>{backlogItems.length} unresolved</span>
+            <span style={{ color: "#cbd5e0", fontSize: "12px" }}>
+              {backlogLoading ? "Loading..." : `${backlogItems.length} unresolved`}
+            </span>
           </div>
-          {backlogItems.map(item => (
-            <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #f7fafc" }}>
+
+          {backlogLoading && (
+            <div style={{ textAlign: "center", padding: "24px 0", color: "#a0aec0", fontSize: "13px" }}>
+              Loading backlog...
+            </div>
+          )}
+
+          {backlogError && (
+            <div style={{ textAlign: "center", padding: "24px 0", color: "#e53e3e", fontSize: "13px" }}>
+              {backlogError}
+            </div>
+          )}
+
+          {!backlogLoading && !backlogError && backlogItems.length === 0 && (
+            <div style={{ textAlign: "center", padding: "24px 0", color: "#a0aec0", fontSize: "13px" }}>
+              No negative feedback found.
+            </div>
+          )}
+
+          {!backlogLoading && !backlogError && backlogItems.map(item => (
+            <div key={item._id || item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #f7fafc" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#edf2f7", color: "#718096", fontSize: "12px", fontWeight: "700", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{item.rank}</span>
                 <div>
                   <div style={{ fontSize: "14px", fontWeight: "600", color: "#2d3748" }}>{item.name}</div>
                   <div style={{ fontSize: "12px", color: "#a0aec0" }}>{item.mentions} mentions <span style={{ margin: "0 4px" }}>•</span>
-                    <span style={{ color: priorityStyles[item.priority].text }}>{item.priority}</span>
+                    <span style={{ color: priorityStyles[item.priority]?.text ?? "#718096" }}>{item.priority}</span>
                   </div>
                 </div>
               </div>
@@ -510,6 +694,48 @@ useEffect(() => {
           senderName={name}
           generatePDF={generatePDF}
         />
+      )}
+
+      {editItem && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "#fff", borderRadius: "16px", padding: "32px", width: "400px", maxWidth: "90vw", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#2d3748", margin: "0 0 8px" }}>Edit Priority</h3>
+            <p style={{ fontSize: "13px", color: "#718096", margin: "0 0 20px", lineHeight: 1.5 }}>{editItem.name}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "24px" }}>
+              {["High", "Medium", "Low"].map(p => (
+                <button
+                  key={p}
+                  onClick={() => setEditPriority(p)}
+                  style={{
+                    padding: "10px 16px", borderRadius: "8px", border: editPriority === p ? "2px solid " + priorityStyles[p].dot : "1px solid #e2e8f0",
+                    background: editPriority === p ? priorityStyles[p].bg : "#fff",
+                    color: editPriority === p ? priorityStyles[p].text : "#4a5568",
+                    fontSize: "13px", fontWeight: "600", cursor: "pointer", textAlign: "left",
+                    display: "flex", alignItems: "center", gap: "8px"
+                  }}
+                >
+                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: priorityStyles[p].dot, flexShrink: 0 }} />
+                  {p}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setEditItem(null)}
+                style={{ padding: "8px 16px", borderRadius: "8px", border: "1px solid #e2e8f0", background: "#fff", color: "#4a5568", fontSize: "13px", cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSave}
+                disabled={editSaving}
+                style={{ padding: "8px 20px", borderRadius: "8px", border: "none", background: "#2563eb", color: "#fff", fontSize: "13px", fontWeight: "600", cursor: "pointer", opacity: editSaving ? 0.7 : 1 }}
+              >
+                {editSaving ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
   </div>
   );

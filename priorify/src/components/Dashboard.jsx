@@ -23,7 +23,10 @@ const ALL_COLORS = ["#3B82F6", "#2e9e6b", "#3B82F6", "#111827", "#3B82F6", "#2e9
 
 function Dashboard() {
   const API_BASE = "http://localhost:5000";
-
+  const handleLogout = () => {
+    localStorage.removeItem("loggedInUser");
+    navigate("/login", { replace: true });
+  };
   const [stats, setStats] = useState({
     totalFeedback: 0,
     positiveSentiment: 0,
@@ -169,6 +172,62 @@ function Dashboard() {
         * { box-sizing: border-box; }
 
         .main-section { display: flex; width: 100vw; }
+.left-sidebar-inner-2 { 
+  display: flex; 
+  flex-direction: column; 
+  margin-top: auto; /* Keeps the whole group at the bottom */
+  width: 100%; 
+  gap: 0px; /* Removed gap to manually control spacing */
+}
+
+/* THIS is the key fix */
+.sidebar-spacer {
+  flex: 1;
+}
+
+/* logout wrapper stays tight to bottom section */
+.logout-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 0 11px 0px 12px; /* Reduced bottom padding from 10px to 5px */
+  position:relative;
+  top:10px
+}
+.logout-btn {
+  width: 90%;
+  height: 40px;
+  background-color: #ef4444;
+  color: white;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+}
+
+.hr-line { 
+  border: none; 
+  height: 1px; 
+  background-color: rgba(255,255,255,0.2); 
+  width: 100%; 
+  margin: 5px 0; /* Reduced margin to bring logout and profile closer */
+}
+
+.lower-div {
+  display: flex; 
+  align-items: center; 
+  margin-top: 5px; /* Reduced from 15px */
+  margin-left: 20px; /* Slightly moved left for better alignment */
+  gap: 10px; 
+  padding-bottom: 15px; 
+  color: white;
+}
+.logout-btn:hover {
+  background-color: #dc2626;
+}
 
         .left-sidebar {
           display: flex; flex-direction: column; height: 100vh; width: 240px;
@@ -331,9 +390,18 @@ function Dashboard() {
               </div>
             </div>
 
-            <div className="left-sidebar-inner-2">
-              <hr className="hr-line" />
-              <div className="lower-div">
+<div className="left-sidebar-inner-2">
+  <div className="sidebar-spacer" />
+
+  <div className="logout-wrapper">
+    <button className="sidebar-btn logout-btn" onClick={handleLogout}>
+      Logout
+    </button>
+  </div>
+
+  <hr className="hr-line" />
+
+  <div className="lower-div">
                 <div className="lower-inner-div-1">{getInitials(name)}</div>
                 <div className="lower-inner-div-2">
                   <h4 className="lower-inner-div-2-heading">{name}</h4>

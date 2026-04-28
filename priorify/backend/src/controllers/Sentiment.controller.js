@@ -131,3 +131,33 @@ function buildSummary(rows) {
     : 0;
   return { total, positive, negative, neutral, high, medium, low, avgScore };
 }
+
+// GET /api/sentiment/negative
+exports.getNegativeFeedback = async (req, res) => {
+  try {
+    const negatives = await SentimentResult.find({
+      sentiment: "Negative"
+    }).sort({ mentions: -1, createdAt: -1 });
+
+    return res.status(200).json({
+      total: negatives.length,
+      results: negatives
+    });
+  } catch (err) {
+    console.error("getNegativeFeedback:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+// GET /api/sentiment
+exports.getAllSentiment = async (req, res) => {
+  try {
+    const results = await SentimentResult.find()
+      .sort({ mentions: -1, createdAt: -1 });
+    return res.status(200).json({ total: results.length, results });
+  } catch (err) {
+    console.error("getAllSentiment:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};

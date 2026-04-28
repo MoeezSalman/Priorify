@@ -1,12 +1,7 @@
 const router = require("express").Router();
-const {
-  getFeedbackStats,
-  getAllFeedback,
-  incrementMention,
-} = require("../controllers/feedback.controller");
- 
-router.get("/stats",               getFeedbackStats);
-router.get("/",                    getAllFeedback);
-router.patch("/:id/mention",       incrementMention);   // ← NEW
- 
+const { getNegativeFeedback, getAllSentiment } = require("../controllers/sentiment.controller");
+
+router.get("/", getAllSentiment);
+router.get("/negative", getNegativeFeedback);
+
 module.exports = router;
