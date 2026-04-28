@@ -36,7 +36,7 @@ function Dashboard() {
   // Live keyword data from KeywordStats collection
   const [graphData, setGraphData]    = useState([]);   // category: "all"
   const [negativeData, setNegativeData] = useState([]); // category: "negative"
-
+  const [showModal, setShowModal] = useState(false);
   // Dropdown selections
   const [topLimit, setTopLimit]       = useState(7);
   const [negLimit, setNegLimit]       = useState(8);
@@ -283,7 +283,77 @@ function Dashboard() {
 
         .main-central-div { display: flex; padding: 20px; gap: 40px; }
         .dashboard-left-content { flex: 1; min-width: 0; }
-
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(76, 124, 243, 0.15);
+  backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; padding: 20px;
+}
+.modal-box {
+  background: #ffffff; border-radius: 20px;
+  border: 1px solid #dbe4ff;
+  width: 100%; max-width: 640px; max-height: 85vh;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 20px 60px rgba(76, 124, 243, 0.15);
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 24px 16px;
+  background: linear-gradient(135deg, #4C7CF3 0%, #3a6be0 100%);
+}
+.modal-header-text p {
+  margin: 0; font-size: 11px; color: rgba(255,255,255,0.7);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.modal-header-text h2 {
+  margin: 4px 0 0; font-size: 18px; font-weight: 600; color: #ffffff;
+}
+.modal-close-btn {
+  background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 8px; width: 32px; height: 32px; cursor: pointer;
+  font-size: 14px; display: flex; align-items: center;
+  justify-content: center; color: white;
+}
+.modal-close-btn:hover { background: rgba(255,255,255,0.3); }
+.modal-body {
+  overflow-y: auto; padding: 22px 24px; flex: 1;
+  display: flex; flex-direction: column; gap: 20px;
+}
+.modal-section h3 {
+  font-size: 14px; font-weight: 600; color: #4C7CF3;
+  margin: 0 0 8px; display: flex; align-items: center; gap: 6px;
+}
+.modal-section h3::before {
+  content: ""; width: 3px; height: 14px;
+  background: #4C7CF3; border-radius: 2px; display: inline-block;
+}
+.modal-section p, .modal-section li {
+  font-size: 13px; color: #4b5563; line-height: 1.65;
+}
+.modal-section ul { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 5px; }
+.modal-caps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 8px; }
+.modal-cap-card {
+  background: #f0f4ff; border: 1px solid #dbe4ff;
+  border-radius: 10px; padding: 12px;
+}
+.modal-cap-card p:first-child { font-size: 12px; font-weight: 600; color: #1d4ed8; margin: 0 0 4px; }
+.modal-cap-card p:last-child { font-size: 12px; color: #6b7280; margin: 0; line-height: 1.5; }
+.modal-warning-box {
+  border-left: 3px solid #f59e0b; padding: 10px 14px;
+  background: #fffbeb; border-radius: 0 8px 8px 0;
+}
+.modal-warning-box li { color: #92400e !important; }
+.modal-footer {
+  padding: 14px 24px; border-top: 1px solid #e5e7eb;
+  display: flex; justify-content: flex-end;
+  background: #f8faff;
+}
+.modal-confirm-btn {
+  background: #4C7CF3; color: white; border: none;
+  padding: 10px 28px; border-radius: 10px; font-size: 14px;
+  font-weight: 600; cursor: pointer; transition: background 0.2s;
+}
+.modal-confirm-btn:hover { background: #3a6be0; }
         .center-main-outer-div {
           display: flex; background-color: #f2f6ff; align-items: center;
           justify-content: space-between; width: 100%; border-radius: 12px;
@@ -445,7 +515,9 @@ function Dashboard() {
                     Monitor feedback trends, track sentiment, and manage priorities to improve
                     your product and customer experience.
                   </p>
-                  <button className="center-middle-div-button">Learn More</button>
+                  <button className="center-middle-div-button" onClick={() => setShowModal(true)}>
+  Learn More
+</button>
                 </div>
                 <img className="center-middle-div-2-img" src={chat} alt="chat" />
               </div>
@@ -565,6 +637,94 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      {showModal && (
+  <div className="modal-overlay" onClick={() => setShowModal(false)}>
+    <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+     <div className="modal-header">
+  <div className="modal-header-text">
+    <p>Documentation</p>
+    <h2>Feedback Analytics – Detailed Overview</h2>
+  </div>
+  <button className="modal-close-btn" onClick={() => setShowModal(false)}>✕</button>
+</div>
+
+      <div className="modal-body">
+        <p style={{ margin: 0, fontSize: 13, color: "#6b7280", lineHeight: 1.6 }}>
+          Welcome to the Feedback Analytics module. This section provides comprehensive insights into user feedback, enabling teams to make informed decisions and improve overall product quality and customer satisfaction.
+        </p>
+
+        <div className="modal-section">
+          <h3>1. Purpose</h3>
+          <p>The Feedback Analytics system is designed to help teams collect, analyze, and act on user feedback. It transforms raw input into meaningful insights that support continuous improvement.</p>
+        </div>
+
+        <div className="modal-section">
+          <h3>2. Data Collection</h3>
+          <p>We gather feedback from multiple sources:</p>
+          <ul>
+            <li>User surveys and forms</li>
+            <li>Customer support interactions</li>
+            <li>In-app feedback submissions</li>
+            <li>Ratings and reviews</li>
+          </ul>
+        </div>
+
+        <div className="modal-section">
+          <h3>3. Features and Capabilities</h3>
+          <div className="modal-caps-grid">
+            {[
+              ["Trend Analysis", "Track feedback patterns over time to identify recurring issues."],
+              ["Sentiment Analysis", "Auto-categorize feedback as positive, negative, or neutral."],
+              ["Categorization & Tagging", "Organize feedback into features, bugs, usability, performance."],
+              ["Prioritization", "Identify high-impact issues based on urgency and frequency."],
+              ["Filtering & Segmentation", "Analyze by user groups, product features, or time periods."],
+            ].map(([title, desc]) => (
+              <div className="modal-cap-card" key={title}>
+                <p>{title}</p>
+                <p>{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="modal-section">
+          <h3>4. Usage Guidelines</h3>
+          <ul>
+            <li>Review feedback regularly for timely action</li>
+            <li>Use insights to guide product decisions and improvements</li>
+            <li>Manual review is recommended for critical issues</li>
+          </ul>
+        </div>
+
+        <div className="modal-section">
+          <h3>5. Limitations</h3>
+          <div className="modal-warning-box">
+            <ul>
+              <li>Sentiment analysis may not always be 100% accurate</li>
+              <li>Feedback data depends on user participation</li>
+              <li>Trends should be interpreted alongside other business metrics</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="modal-section">
+          <h3>6. Data Privacy and Security</h3>
+          <p>All feedback is stored securely. Sensitive information is handled in compliance with data protection regulations. Access is restricted to authorized personnel only.</p>
+        </div>
+
+        <div className="modal-section">
+          <h3>7. Contact and Support</h3>
+          <p>For questions, issues, or suggestions regarding Feedback Analytics, please contact your system administrator or support team.</p>
+        </div>
+      </div>
+
+      <div className="modal-footer">
+        <button className="modal-confirm-btn" onClick={() => setShowModal(false)}>Got it</button>
+      </div>
+    </div>
+  </div>
+)}
     </>
   );
 }
