@@ -191,7 +191,13 @@ function TeamCard({ team, onManage, onDelete }) {
     </div>
   );
 }
+const today = new Date();
 
+const formattedDate = today.toLocaleDateString("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
 function DeleteConfirmModal({ team, onClose, onDeleted }) {
   const [loading, setLoading] = useState(false);
 
@@ -1070,7 +1076,7 @@ export default function TeamsPage() {
                 <h1 className="tm-page-title">Teams</h1>
               </div>
               <div className="tm-header-right">
-                <div className="tm-date-chip">📅 13 March 2024</div>
+                <div className="tm-date-chip">📅 {formattedDate}</div>
                 <button className="tm-create-btn" onClick={() => setShowModal(true)}>+ Create Team</button>
               </div>
             </div>

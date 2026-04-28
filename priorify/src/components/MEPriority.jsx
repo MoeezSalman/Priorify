@@ -3,98 +3,6 @@ import { useNavigate } from "react-router-dom";
 import hamburger from "../assets/hamburger.png";
 import logo from "../assets/logo.png";
 
-// --- Mock Data ---
-const initialFeatures = [
-  {
-    id: 1,
-    name: "Dark Mode Support",
-    mentions: 142,
-    priority: "High",
-    sentiment: "Positive",
-    sprint: true,
-    rank: 1,
-    date: "10 Mar 2021",
-    score: 85,
-  },
-  {
-    id: 2,
-    name: "Slow Loading Times",
-    mentions: 134,
-    priority: "High",
-    sentiment: "Negative",
-    sprint: true,
-    rank: 2,
-    date: "10 Mar 2021",
-    score: 20,
-  },
-  {
-    id: 3,
-    name: "Notification Overload",
-    mentions: 112,
-    priority: "High",
-    sentiment: "Negative",
-    sprint: true,
-    rank: 3,
-    date: "09 Mar 2021",
-    score: 35,
-  },
-  {
-    id: 4,
-    name: "Offline Access",
-    mentions: 98,
-    priority: "High",
-    sentiment: "Neutral",
-    sprint: false,
-    rank: 4,
-    date: "08 Mar 2021",
-    score: 55,
-  },
-  {
-    id: 5,
-    name: "Team Collaboration",
-    mentions: 89,
-    priority: "Medium",
-    sentiment: "Positive",
-    sprint: false,
-    rank: 5,
-    date: "08 Mar 2021",
-    score: 78,
-  },
-  {
-    id: 6,
-    name: "Calendar Integration",
-    mentions: 76,
-    priority: "Medium",
-    sentiment: "Positive",
-    sprint: false,
-    rank: 6,
-    date: "07 Mar 2021",
-    score: 72,
-  },
-  {
-    id: 7,
-    name: "Export to PDF",
-    mentions: 55,
-    priority: "Medium",
-    sentiment: "Neutral",
-    sprint: false,
-    rank: 7,
-    date: "06 Mar 2021",
-    score: 50,
-  },
-  {
-    id: 8,
-    name: "Custom Themes",
-    mentions: 43,
-    priority: "Low",
-    sentiment: "Positive",
-    sprint: false,
-    rank: 8,
-    date: "10 Mar 2021",
-    score: 44,
-  },
-];
-
 const priorityStyles = {
   High: { bg: "#fff5f5", text: "#e53e3e", dot: "#e53e3e" },
   Medium: { bg: "#fffaf0", text: "#dd6b20", dot: "#ed8936" },
@@ -182,58 +90,131 @@ const hamburgerBtn = {
   flexShrink: 0,
 };
 
+const API_BASE = "http://localhost:5000";
+
 export default function MEPriority() {
+  const [teamName, setTeamName] = useState("");
+  const [teamMembers, setTeamMembers] = useState([]);
   const [sentimentFilter, setSentimentFilter] = useState("All");
-  const [priorityFilter, setPriorityFilter] = useState("Low");
+  const [priorityFilter, setPriorityFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [activeState, setActiveState] = useState("MEPriority");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTeamDropupOpen, setIsTeamDropupOpen] = useState(false);
 
+  // --- All Features table state ---
+  const [allFeatures, setAllFeatures] = useState([]);
+  const [featuresLoading, setFeaturesLoading] = useState(true);
+  const [featuresError, setFeaturesError] = useState(null);
+
+  // --- Sprint Backlog state ---
+  const [sprintItems, setSprintItems] = useState([]);
+  const [sprintLoading, setSprintLoading] = useState(true);
+  const [sprintError, setSprintError] = useState(null);
+
   const navigate = useNavigate();
   const teamDropupRef = useRef(null);
 
-  const TeamName = "Hope Project";
+  // --- Fetch team from API ---
+  const fetchTeam = async () => {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
+      if (!storedUser) return;
 
-  const storedUser = JSON.parse(localStorage.getItem("loggedInUser"));
-  const name = storedUser
-    ? `${storedUser.firstName} ${storedUser.lastName}`
-    : "JOE MAX";
+      const res = await fetch(
+        `${API_BASE}/api/admin/engineer-team/${storedUser.id}`
+      );
 
-  const teamMembers = [
-    {
-      id: 1,
-      name: name,
-      role: "Team Leader",
-      isLoggedIn: true,
-    },
-    {
-      id: 2,
-      name: "Mirha Fatima",
-      role: "Requirement Engineer",
-      isLoggedIn: false,
-    },
-    {
-      id: 3,
-      name: "Alex Singh",
-      role: "Frontend Dev",
-      isLoggedIn: false,
-    },
-    {
-      id: 4,
-      name: "Rita Lin",
-      role: "QA Engineer",
-      isLoggedIn: false,
-    },
-    {
-      id: 5,
-      name: "Dev Kumar",
-      role: "Backend Dev",
-      isLoggedIn: false,
-    },
-  ];
+      const team = await res.json();
+      if (!team) return;
+
+      setTeamName(team.teamName);
+
+      const members = team.members.map((m) => ({
+        id: m._id,
+        name: `${m.firstName} ${m.lastName}`,
+        role: m.role,
+        isLoggedIn: m._id === storedUser.id,
+      }));
+
+      setTeamMembers(members);
+    } catch (err) {
+      console.error("Error fetching team:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeam();
+  }, []);
+
+  // --- Fetch all features for table ---
+  useEffect(() => {
+    setFeaturesLoading(true);
+    setFeaturesError(null);
+    fetch(`${API_BASE}/api/sentiment`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch features");
+        return res.json();
+      })
+      .then((data) => {
+        const raw = Array.isArray(data) ? data : (data.results || []);
+        const items = raw.map((item) => ({
+          ...item,
+          id: item._id,
+          name: item.feedbackText || item.name || "Untitled",
+          mentions: item.mentions ?? 0,
+          priority: item.priority || "Low",
+          score: item.score ?? 0,
+          date: item.createdAt
+            ? new Date(item.createdAt).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+            : "—",
+        }));
+        setAllFeatures(items);
+        setFeaturesLoading(false);
+      })
+      .catch((err) => {
+        console.error("Features fetch error:", err);
+        setFeaturesError("Failed to load features.");
+        setFeaturesLoading(false);
+      });
+  }, []);
+
+  // --- Fetch Sprint Backlog: top 3 High priority ---
+  useEffect(() => {
+    setSprintLoading(true);
+    setSprintError(null);
+    fetch(`${API_BASE}/api/sentiment/negative`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch sprint backlog");
+        return res.json();
+      })
+      .then((data) => {
+        const highPriority = (data.results || [])
+          .filter((item) => item.priority === "High")
+          .slice(0, 3)
+          .map((item, index) => ({
+            ...item,
+            rank: index + 1,
+            name: item.feedbackText || "Untitled",
+            mentions: item.mentions ?? 0,
+            priority: "High",
+          }));
+        setSprintItems(highPriority);
+        setSprintLoading(false);
+      })
+      .catch((err) => {
+        console.error("Sprint Backlog fetch error:", err);
+        setSprintError("Failed to load sprint backlog.");
+        setSprintLoading(false);
+      });
+  }, []);
 
   const getInitials = (fullName) => {
+    if (!fullName || !fullName.trim()) return "??";
     const words = fullName.trim().split(" ");
     const first = words[0]?.[0] || "";
     const last = words[1]?.[0] || "";
@@ -259,7 +240,7 @@ export default function MEPriority() {
     };
   }, []);
 
-  const filteredFeatures = initialFeatures.filter((f) => {
+  const filteredFeatures = allFeatures.filter((f) => {
     const matchesPriority =
       priorityFilter === "All" || f.priority === priorityFilter;
     const matchesSentiment =
@@ -268,12 +249,12 @@ export default function MEPriority() {
     return matchesPriority && matchesSentiment && matchesSearch;
   });
 
-  const sprintItems = initialFeatures.filter((f) => f.sprint);
-  const backlogItems = initialFeatures.filter((f) => !f.sprint);
-
   return (
     <div>
       <style>{`
+        ::-webkit-scrollbar { display: none; }
+        * { scrollbar-width: none; -ms-overflow-style: none; }
+
         body:has(.analytics-page) {
           display: block !important;
           background: #f7f9fc !important;
@@ -653,7 +634,7 @@ export default function MEPriority() {
             <hr style={hrLine} />
 
             <div className="lower-div">
-              <div className="lower-inner-div-1">{getInitials(TeamName)}</div>
+              <div className="lower-inner-div-1">{getInitials(teamName)}</div>
 
               <div
                 className="lower-inner-div-2 team-dropup-wrapper"
@@ -664,7 +645,9 @@ export default function MEPriority() {
                   onClick={() => setIsTeamDropupOpen((prev) => !prev)}
                 >
                   <div className="team-title-wrap">
-                    <h4 className="lower-inner-div-2-heading">{TeamName}</h4>
+                    <h4 className="lower-inner-div-2-heading">
+                      {teamName || "Loading..."}
+                    </h4>
                     <p className="team-member-count">
                       {teamMembers.length} members
                     </p>
@@ -680,7 +663,7 @@ export default function MEPriority() {
                 {isTeamDropupOpen && (
                   <div className="modern-team-menu">
                     <div className="team-menu-header">
-                      <p className="team-menu-title">{TeamName} team members</p>
+                      <p className="team-menu-title">{teamName} team members</p>
                     </div>
 
                     <div className="team-menu-list">
@@ -699,7 +682,9 @@ export default function MEPriority() {
                                 <span className="online-dot"></span>
                               )}
                             </div>
-                            <div className="team-member-role">{member.role}</div>
+                            <div className="team-member-role">
+                              {member.role}
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -725,6 +710,7 @@ export default function MEPriority() {
           transition: "margin-left 0.2s ease, width 0.2s ease",
         }}
       >
+        {/* --- HEADER --- */}
         <div
           className="fa-header"
           style={{
@@ -839,6 +825,7 @@ export default function MEPriority() {
           </div>
         </div>
 
+        {/* --- FILTERS --- */}
         <div
           className="fa-filters"
           style={{
@@ -877,7 +864,11 @@ export default function MEPriority() {
             }}
           >
             <span
-              style={{ fontSize: "13px", color: "#718096", whiteSpace: "nowrap" }}
+              style={{
+                fontSize: "13px",
+                color: "#718096",
+                whiteSpace: "nowrap",
+              }}
             >
               Sentiment:
             </span>
@@ -942,7 +933,11 @@ export default function MEPriority() {
             }}
           >
             <span
-              style={{ fontSize: "13px", color: "#718096", whiteSpace: "nowrap" }}
+              style={{
+                fontSize: "13px",
+                color: "#718096",
+                whiteSpace: "nowrap",
+              }}
             >
               Priority:
             </span>
@@ -1030,6 +1025,7 @@ export default function MEPriority() {
           </div>
         </div>
 
+        {/* --- FEATURE REQUESTS TABLE --- */}
         <div
           style={{
             background: "#fff",
@@ -1038,6 +1034,8 @@ export default function MEPriority() {
             boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
             marginBottom: "24px",
             overflowX: "auto",
+            maxHeight: "480px",
+            overflowY: "auto",
           }}
         >
           <div
@@ -1071,7 +1069,7 @@ export default function MEPriority() {
                   borderRadius: "10px",
                 }}
               >
-                {filteredFeatures.length} features
+                {featuresLoading ? "..." : `${filteredFeatures.length} features`}
               </span>
             </div>
 
@@ -1080,197 +1078,252 @@ export default function MEPriority() {
             </span>
           </div>
 
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              minWidth: "480px",
-            }}
-          >
-            <thead>
-              <tr
-                style={{
-                  textAlign: "left",
-                  borderBottom: "1px solid #edf2f7",
-                }}
-              >
-                <th
-                  style={{
-                    paddingBottom: "12px",
-                    fontSize: "11px",
-                    color: "#cbd5e0",
-                    fontWeight: "700",
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  FEATURE NAME
-                </th>
-                <th
-                  style={{
-                    paddingBottom: "12px",
-                    fontSize: "11px",
-                    color: "#cbd5e0",
-                    fontWeight: "700",
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  MENTIONS
-                </th>
-                <th
-                  className="fa-col-score"
-                  style={{
-                    paddingBottom: "12px",
-                    fontSize: "11px",
-                    color: "#cbd5e0",
-                    fontWeight: "700",
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  SENTIMENT SCORE
-                </th>
-                <th
-                  style={{
-                    paddingBottom: "12px",
-                    fontSize: "11px",
-                    color: "#cbd5e0",
-                    fontWeight: "700",
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  PRIORITY
-                </th>
-                <th
-                  className="fa-col-date"
-                  style={{
-                    paddingBottom: "12px",
-                    fontSize: "11px",
-                    color: "#cbd5e0",
-                    fontWeight: "700",
-                    letterSpacing: "0.05em",
-                  }}
-                >
-                  DATE ADDED
-                </th>
-              </tr>
-            </thead>
+          {featuresLoading && (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "32px 0",
+                color: "#a0aec0",
+                fontSize: "13px",
+              }}
+            >
+              Loading features...
+            </div>
+          )}
 
-            <tbody>
-              {filteredFeatures.map((f) => (
-                <tr key={f.id} style={{ borderBottom: "1px solid #f7fafc" }}>
-                  <td
-                    className="fa-table-cell fa-table-name"
-                    style={{
-                      padding: "16px 0",
-                      fontSize: "14px",
-                      color: "#4a5568",
-                      fontWeight: "500",
-                    }}
-                  >
-                    <span
-                      style={{
-                        display: "inline-block",
-                        width: "8px",
-                        height: "8px",
-                        borderRadius: "50%",
-                        background: priorityStyles[f.priority].dot,
-                        marginRight: "10px",
-                        flexShrink: 0,
-                      }}
-                    />
-                    {f.name}
-                  </td>
+          {featuresError && (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "32px 0",
+                color: "#e53e3e",
+                fontSize: "13px",
+              }}
+            >
+              {featuresError}
+            </div>
+          )}
 
-                  <td
-                    className="fa-table-cell"
+          {!featuresLoading && !featuresError && (
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                minWidth: "480px",
+              }}
+            >
+              <thead>
+                <tr
+                  style={{
+                    textAlign: "left",
+                    borderBottom: "1px solid #edf2f7",
+                  }}
+                >
+                  <th
                     style={{
-                      fontSize: "14px",
-                      color: "#4299e1",
+                      paddingBottom: "12px",
+                      fontSize: "11px",
+                      color: "#cbd5e0",
                       fontWeight: "700",
-                      padding: "16px 8px 16px 0",
+                      letterSpacing: "0.05em",
                     }}
                   >
-                    {f.mentions}
-                  </td>
-
-                  <td
-                    className="fa-col-score fa-table-cell"
-                    style={{ padding: "16px 8px 16px 0" }}
+                    FEATURE NAME
+                  </th>
+                  <th
+                    style={{
+                      paddingBottom: "12px",
+                      fontSize: "11px",
+                      color: "#cbd5e0",
+                      fontWeight: "700",
+                      letterSpacing: "0.05em",
+                    }}
                   >
-                    <div
+                    MENTIONS
+                  </th>
+                  <th
+                    className="fa-col-score"
+                    style={{
+                      paddingBottom: "12px",
+                      fontSize: "11px",
+                      color: "#cbd5e0",
+                      fontWeight: "700",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    SENTIMENT SCORE
+                  </th>
+                  <th
+                    style={{
+                      paddingBottom: "12px",
+                      fontSize: "11px",
+                      color: "#cbd5e0",
+                      fontWeight: "700",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    PRIORITY
+                  </th>
+                  <th
+                    className="fa-col-date"
+                    style={{
+                      paddingBottom: "12px",
+                      fontSize: "11px",
+                      color: "#cbd5e0",
+                      fontWeight: "700",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    DATE ADDED
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredFeatures.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={5}
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
+                        textAlign: "center",
+                        padding: "32px 0",
+                        color: "#a0aec0",
+                        fontSize: "13px",
                       }}
                     >
-                      <div
+                      No features match the selected filters.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredFeatures.map((f) => (
+                    <tr
+                      key={f._id || f.id}
+                      style={{ borderBottom: "1px solid #f7fafc" }}
+                    >
+                      <td
+                        className="fa-table-cell fa-table-name"
                         style={{
-                          width: "80px",
-                          height: "6px",
-                          background: "#edf2f7",
-                          borderRadius: "3px",
-                          overflow: "hidden",
+                          padding: "16px 0",
+                          fontSize: "14px",
+                          color: "#4a5568",
+                          fontWeight: "500",
                         }}
+                      >
+                        <span
+                          style={{
+                            display: "inline-block",
+                            width: "8px",
+                            height: "8px",
+                            borderRadius: "50%",
+                            background:
+                              priorityStyles[f.priority]?.dot ?? "#ccc",
+                            marginRight: "10px",
+                            flexShrink: 0,
+                          }}
+                        />
+                        {f.name}
+                      </td>
+
+                      <td
+                        className="fa-table-cell"
+                        style={{
+                          fontSize: "14px",
+                          color: "#4299e1",
+                          fontWeight: "700",
+                          padding: "16px 8px 16px 0",
+                        }}
+                      >
+                        {f.mentions}
+                      </td>
+
+                      <td
+                        className="fa-col-score fa-table-cell"
+                        style={{ padding: "16px 8px 16px 0" }}
                       >
                         <div
                           style={{
-                            width: `${f.score}%`,
-                            height: "100%",
-                            background: "#ed8936",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
                           }}
-                        />
-                      </div>
-                      <span
+                        >
+                          <div
+                            style={{
+                              width: "80px",
+                              height: "6px",
+                              background: "#edf2f7",
+                              borderRadius: "3px",
+                              overflow: "hidden",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${Math.min(f.score, 100)}%`,
+                                height: "100%",
+                                background: "#ed8936",
+                              }}
+                            />
+                          </div>
+                          <span
+                            style={{
+                              fontSize: "13px",
+                              color: "#ed8936",
+                              fontWeight: "700",
+                            }}
+                          >
+                            +{f.score}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td
+                        className="fa-table-cell"
+                        style={{ padding: "16px 8px 16px 0" }}
+                      >
+                        <span
+                          style={{
+                            background:
+                              priorityStyles[f.priority]?.bg ?? "#edf2f7",
+                            color:
+                              priorityStyles[f.priority]?.text ?? "#718096",
+                            padding: "4px 12px",
+                            borderRadius: "20px",
+                            fontSize: "11px",
+                            fontWeight: "700",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {f.priority}
+                        </span>
+                      </td>
+
+                      <td
+                        className="fa-col-date fa-table-cell"
                         style={{
                           fontSize: "13px",
-                          color: "#ed8936",
-                          fontWeight: "700",
+                          color: "#718096",
+                          padding: "16px 8px 16px 0",
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        +{f.score}
-                      </span>
-                    </div>
-                  </td>
-
-                  <td
-                    className="fa-table-cell"
-                    style={{ padding: "16px 8px 16px 0" }}
-                  >
-                    <span
-                      style={{
-                        background: priorityStyles[f.priority].bg,
-                        color: priorityStyles[f.priority].text,
-                        padding: "4px 12px",
-                        borderRadius: "20px",
-                        fontSize: "11px",
-                        fontWeight: "700",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {f.priority}
-                    </span>
-                  </td>
-
-                  <td
-                    className="fa-col-date fa-table-cell"
-                    style={{
-                      fontSize: "13px",
-                      color: "#718096",
-                      padding: "16px 8px 16px 0",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {f.date}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        {f.date}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
 
+        {/* --- SPRINT BACKLOG PANEL --- */}
         <div
           className="fa-bottom-grid"
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "24px",
+          }}
         >
           <div
             style={{
@@ -1278,6 +1331,8 @@ export default function MEPriority() {
               borderRadius: "12px",
               padding: "24px",
               boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+              maxHeight: "480px",
+              overflowY: "auto",
             }}
           >
             <div
@@ -1315,58 +1370,113 @@ export default function MEPriority() {
                   ACTIVE SPRINT
                 </span>
               </div>
-              <span style={{ fontSize: "12px", color: "#cbd5e0" }}>Top 3</span>
+              <span style={{ fontSize: "12px", color: "#cbd5e0" }}>
+                {sprintLoading ? "Loading..." : "Top 3"}
+              </span>
             </div>
 
-            {sprintItems.map((item) => (
+            {sprintLoading && (
               <div
-                key={item.id}
                 style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "12px 0",
-                  borderBottom: "1px solid #f7fafc",
+                  textAlign: "center",
+                  padding: "24px 0",
+                  color: "#a0aec0",
+                  fontSize: "13px",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <span
+                Loading...
+              </div>
+            )}
+
+            {sprintError && (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "24px 0",
+                  color: "#e53e3e",
+                  fontSize: "13px",
+                }}
+              >
+                {sprintError}
+              </div>
+            )}
+
+            {!sprintLoading && !sprintError && sprintItems.length === 0 && (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "24px 0",
+                  color: "#a0aec0",
+                  fontSize: "13px",
+                }}
+              >
+                No high priority items found.
+              </div>
+            )}
+
+            {!sprintLoading &&
+              !sprintError &&
+              sprintItems.map((item) => (
+                <div
+                  key={item._id || item.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "12px 0",
+                    borderBottom: "1px solid #f7fafc",
+                  }}
+                >
+                  <div
                     style={{
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "50%",
-                      background: "#4299e1",
-                      color: "#fff",
-                      fontSize: "12px",
-                      fontWeight: "700",
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
+                      gap: "12px",
                     }}
                   >
-                    {item.rank}
-                  </span>
-                  <div>
-                    <div
+                    <span
                       style={{
-                        fontSize: "14px",
-                        fontWeight: "600",
-                        color: "#2d3748",
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "50%",
+                        background: "#4299e1",
+                        color: "#fff",
+                        fontSize: "12px",
+                        fontWeight: "700",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
                       }}
                     >
-                      {item.name}
-                    </div>
-                    <div style={{ fontSize: "12px", color: "#a0aec0" }}>
-                      {item.mentions} mentions <span style={{ margin: "0 4px" }}>•</span>
-                      <span style={{ color: priorityStyles[item.priority].text }}>
-                        {item.priority}
-                      </span>
+                      {item.rank}
+                    </span>
+                    <div>
+                      <div
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          color: "#2d3748",
+                        }}
+                      >
+                        {item.name}
+                      </div>
+                      <div style={{ fontSize: "12px", color: "#a0aec0" }}>
+                        {item.mentions} mentions{" "}
+                        <span style={{ margin: "0 4px" }}>•</span>
+                        <span
+                          style={{
+                            color:
+                              priorityStyles[item.priority]?.text ?? "#718096",
+                          }}
+                        >
+                          {item.priority}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </div>
